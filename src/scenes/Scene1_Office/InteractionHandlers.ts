@@ -262,80 +262,71 @@ export class InteractionHandlers {
         }
         
         if (!this.gameState.interactedObjects.has('fishtank')) {
-            this.dialog.showDialog("I almost forgot to feed the fish. *tap to feed*");
+            // Create a taller dialog box to fit all four options
+            const dialogBox = this.scene.add.rectangle(512, 650, 900, 250, 0x000000, 0.8);
+            const dialogText = this.scene.add.text(512, 580, "The poor fish is trapped… just swimming in circles", { 
+                fontFamily: 'Arial', 
+                fontSize: '24px', 
+                color: '#ffffff',
+                align: 'center',
+                wordWrap: { width: 850 }
+            }).setOrigin(0.5);
             
-            // After feeding animation, show the contemplative dialog
-            this.scene.time.delayedCall(2000, () => {
-                // Make sure to hide the previous dialog before showing the new one
-                this.dialog.hideDialog();
-                this.cleanupCustomDialogs();
-                
-                // Create a taller dialog box to fit all four options
-                const dialogBox = this.scene.add.rectangle(512, 650, 900, 250, 0x000000, 0.8);
-                const dialogText = this.scene.add.text(512, 580, "The poor fish is trapped… just swimming in circles", { 
+            // Create the four option buttons with more space between them
+            const choices = [
+                "But at least it's safe and cared for",
+                "It's a comfortable prison, like this office",
+                "Still, it's doing what it's supposed to do",
+                "I wonder if fish dream of being something else"
+            ];
+            
+            const choiceButtons: Phaser.GameObjects.Text[] = [];
+            
+            choices.forEach((choice, index) => {
+                const yPos = 620 + (index * 35); // Reduced vertical spacing to fit all options
+                const button = this.scene.add.text(512, yPos, choice, { 
                     fontFamily: 'Arial', 
-                    fontSize: '24px', 
-                    color: '#ffffff',
-                    align: 'center',
-                    wordWrap: { width: 850 }
-                }).setOrigin(0.5);
-                
-                // Create the four option buttons with more space between them
-                const choices = [
-                    "But at least it's safe and cared for",
-                    "It's a comfortable prison, like this office",
-                    "Still, it's doing what it's supposed to do",
-                    "I wonder if fish dream of being something else"
-                ];
-                
-                const choiceButtons: Phaser.GameObjects.Text[] = [];
-                
-                choices.forEach((choice, index) => {
-                    const yPos = 620 + (index * 35); // Reduced vertical spacing to fit all options
-                    const button = this.scene.add.text(512, yPos, choice, { 
-                        fontFamily: 'Arial', 
-                        fontSize: '18px', // Slightly smaller font to fit better
-                        color: '#ffff00',
-                        backgroundColor: '#333333',
-                        padding: { x: 10, y: 5 }
-                    })
-                    .setOrigin(0.5)
-                    .setInteractive({ useHandCursor: true })
-                    .on('pointerover', () => button.setColor('#ff0000'))
-                    .on('pointerout', () => button.setColor('#ffff00'))
-                    .on('pointerdown', () => {
-                        // Record choice based on selection
-                        if (choice.includes("safe and cared for")) {
-                            this.gameState.playerChoices['fish_thought'] = 'safe';
-                        } else if (choice.includes("comfortable prison")) {
-                            this.gameState.playerChoices['fish_thought'] = 'freedom';
-                        } else if (choice.includes("what it's supposed to do")) {
-                            this.gameState.playerChoices['fish_thought'] = 'overachiever';
-                        } else if (choice.includes("dream of being something else")) {
-                            this.gameState.playerChoices['fish_thought'] = 'funny';
-                        }
-                        
-                        // Clean up UI
-                        this.cleanupCustomDialogs();
-                        
-                        // Mark as interacted
-                        this.gameState.interactedObjects.add('fishtank');
-                        
-                        // Check if player is ready to leave
-                        this.gameState.checkReadyToLeave();
-                    });
+                    fontSize: '18px', // Slightly smaller font to fit better
+                    color: '#ffff00',
+                    backgroundColor: '#333333',
+                    padding: { x: 10, y: 5 }
+                })
+                .setOrigin(0.5)
+                .setInteractive({ useHandCursor: true })
+                .on('pointerover', () => button.setColor('#ff0000'))
+                .on('pointerout', () => button.setColor('#ffff00'))
+                .on('pointerdown', () => {
+                    // Record choice based on selection
+                    if (choice.includes("safe and cared for")) {
+                        this.gameState.playerChoices['fish_thought'] = 'safe';
+                    } else if (choice.includes("comfortable prison")) {
+                        this.gameState.playerChoices['fish_thought'] = 'freedom';
+                    } else if (choice.includes("what it's supposed to do")) {
+                        this.gameState.playerChoices['fish_thought'] = 'overachiever';
+                    } else if (choice.includes("dream of being something else")) {
+                        this.gameState.playerChoices['fish_thought'] = 'funny';
+                    }
                     
-                    // Store the button for later cleanup
-                    choiceButtons.push(button);
+                    // Clean up UI
+                    this.cleanupCustomDialogs();
+                    
+                    // Mark as interacted
+                    this.gameState.interactedObjects.add('fishtank');
+                    
+                    // Check if player is ready to leave
+                    this.gameState.checkReadyToLeave();
                 });
                 
-                // Store the active dialogs for cleanup
-                this.activeCustomDialogs = {
-                    box: dialogBox,
-                    text: dialogText,
-                    buttons: choiceButtons
-                };
+                // Store the button for later cleanup
+                choiceButtons.push(button);
             });
+            
+            // Store the active dialogs for cleanup
+            this.activeCustomDialogs = {
+                box: dialogBox,
+                text: dialogText,
+                buttons: choiceButtons
+            };
         } else {
             this.dialog.showDialog("The fish seems content after being fed.");
         }
