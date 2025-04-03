@@ -1,6 +1,6 @@
-import { Scene } from 'phaser';
+import { BaseScene, EnergyLevel } from './BaseScene';
 
-export class Scene2_Skytrain extends Scene {
+export class Scene2_Skytrain extends BaseScene {
     private background: Phaser.GameObjects.Image;
     private continueText: Phaser.GameObjects.Text;
 
@@ -14,13 +14,21 @@ export class Scene2_Skytrain extends Scene {
     }
 
     create() {
+        // Call parent create method to set up defaults including font override
+        super.create();
+        
         // Add placeholder background
         const placeholderColor = 0x222222;
         this.background = this.add.rectangle(512, 384, 1024, 768, placeholderColor) as any;
         
+        // Initialize custom cursor using BaseScene method
+        this.initCursor();
+        
+        // Display energy level (MEDIUM in this scene)
+        this.showEnergyLevel(EnergyLevel.MEDIUM);
+        
         // Add text indicating we've reached the next scene
         this.add.text(512, 300, 'Walking to the Skytrain', { 
-            fontFamily: 'Arial', 
             fontSize: '36px', 
             color: '#ffffff' 
         }).setOrigin(0.5);
@@ -33,7 +41,6 @@ export class Scene2_Skytrain extends Scene {
             ).join('\n');
             
             this.add.text(512, 400, 'Your choices so far:\n' + choicesText, { 
-                fontFamily: 'Arial', 
                 fontSize: '22px', 
                 color: '#aaaaaa',
                 align: 'center'
@@ -43,16 +50,18 @@ export class Scene2_Skytrain extends Scene {
         }
         
         // Add text to continue
-        this.continueText = this.add.text(512, 600, 'This scene is a placeholder.\nClick anywhere to return to the main menu.', { 
-            fontFamily: 'Arial', 
+        this.continueText = this.add.text(512, 600, 'Click anywhere to continue to the Bus scene', { 
             fontSize: '24px', 
             color: '#ffffff',
             align: 'center'
         }).setOrigin(0.5);
         
-        // Add input handler to go back to main menu
+        // Add input handler to go to the next scene
         this.input.on('pointerdown', () => {
-            this.scene.start('MainMenu');
+            // Increase energy level for the next scene
+            localStorage.setItem('playerEnergyLevel', EnergyLevel.HIGH);
+            // Go to the Bus scene
+            this.transitionToScene('Scene3_Bus');
         });
     }
 } 

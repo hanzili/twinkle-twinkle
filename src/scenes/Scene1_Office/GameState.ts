@@ -34,7 +34,6 @@ export class GameState {
                 // Show "Ready to leave" prompt
                 this.scene.time.delayedCall(1000, () => {
                     const leaveButton = this.scene.add.text(512, 200, 'Ready to leave the office?', { 
-                        fontFamily: 'Arial', 
                         fontSize: '28px', 
                         color: '#ffffff',
                         backgroundColor: '#550000',

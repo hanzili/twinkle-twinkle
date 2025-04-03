@@ -65,7 +65,6 @@ export class InteractionHandlers {
             // Create a custom dialog box for the computer options
             const dialogBox = this.scene.add.rectangle(512, 650, 900, 180, 0x000000, 0.8);
             const dialogText = this.scene.add.text(512, 620, "The work is never-ending...", { 
-                fontFamily: 'Arial', 
                 fontSize: '24px', 
                 color: '#ffffff',
                 align: 'center',
@@ -83,7 +82,6 @@ export class InteractionHandlers {
             choices.forEach((choice, index) => {
                 const yPos = 660 + (index * 40);
                 const button = this.scene.add.text(512, yPos, choice, { 
-                    fontFamily: 'Arial', 
                     fontSize: '20px',
                     color: '#ffff00',
                     backgroundColor: '#333333',
@@ -265,7 +263,6 @@ export class InteractionHandlers {
             // Create a taller dialog box to fit all four options
             const dialogBox = this.scene.add.rectangle(512, 650, 900, 250, 0x000000, 0.8);
             const dialogText = this.scene.add.text(512, 580, "The poor fish is trapped… just swimming in circles", { 
-                fontFamily: 'Arial', 
                 fontSize: '24px', 
                 color: '#ffffff',
                 align: 'center',
@@ -285,8 +282,7 @@ export class InteractionHandlers {
             choices.forEach((choice, index) => {
                 const yPos = 620 + (index * 35); // Reduced vertical spacing to fit all options
                 const button = this.scene.add.text(512, yPos, choice, { 
-                    fontFamily: 'Arial', 
-                    fontSize: '18px', // Slightly smaller font to fit better
+                    fontSize: '20px',
                     color: '#ffff00',
                     backgroundColor: '#333333',
                     padding: { x: 10, y: 5 }

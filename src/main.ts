@@ -5,6 +5,8 @@ import { MainMenu } from './scenes/MainMenu';
 import { Preloader } from './scenes/Preloader';
 import { Scene1_Office } from './scenes/Scene1_Office';
 import { Scene2_Skytrain } from './scenes/Scene2_Skytrain';
+import { Scene3_Bus } from './scenes/Scene3_Bus';
+import { Scene4_Ending } from './scenes/Scene4_Ending';
 
 import { Game, Types } from "phaser";
 
@@ -26,6 +28,8 @@ const config: Types.Core.GameConfig = {
         MainMenu,
         Scene1_Office,
         Scene2_Skytrain,
+        Scene3_Bus,
+        Scene4_Ending,
         MainGame,
         GameOver
     ]

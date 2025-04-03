@@ -1,6 +1,7 @@
 import { Scene } from 'phaser';
+import { BaseScene } from './BaseScene';
 
-export class Preloader extends Scene
+export class Preloader extends BaseScene
 {
     constructor ()
     {
@@ -36,6 +37,20 @@ export class Preloader extends Scene
         this.load.image('logo', 'logo.png');
         this.load.image('background', 'background.png');
         
+        // Font preloading
+        // WebFont.load is not built into Phaser, but we can make sure our custom font is loaded
+        // through the CSS and check it here
+        const fontLoadedCheck = () => {
+            if (document.fonts && document.fonts.check('12px PressStart2P')) {
+                console.log('PressStart2P font confirmed loaded by Preloader');
+            } else {
+                console.warn('PressStart2P font not detected, game text may use fallback fonts');
+            }
+        };
+        
+        // Check font after a brief delay to allow for CSS loading
+        this.time.delayedCall(500, fontLoadedCheck);
+        
         // Office Escape game assets
         this.load.image('office_bg', 'office_background.png');
         this.load.image('computer', 'computer.png');
@@ -47,6 +62,12 @@ export class Preloader extends Scene
         this.load.image('fish', 'fish.png');
         this.load.image('goji_berries', 'goji_berries.png');
         this.load.image('skytrain_bg', 'skytrain_background.png');
+        
+        // Energy level icons
+        this.load.image('energy-empty', 'energy-bar/energy-empty.png');
+        this.load.image('energy-low', 'energy-bar/energy-low.png');
+        this.load.image('energy-medium', 'energy-bar/energy-medium.png');
+        this.load.image('energy-high', 'energy-bar/energy-high.png');
         
         // Animation spritesheets
         this.load.spritesheet('fish_animation', 'fish_animation.png', { 
@@ -62,6 +83,9 @@ export class Preloader extends Scene
 
     create ()
     {
+        // Call parent create method to set up defaults including font override
+        super.create();
+        
         //  When all the assets have loaded, it's often worth creating global objects here that the rest of the game can use.
         //  For example, you can define global animations here, so we can use them in other scenes.
 

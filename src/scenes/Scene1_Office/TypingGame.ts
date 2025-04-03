@@ -102,7 +102,6 @@ export class TypingGame {
         
         // Create timer display
         this.typingGameTimer = this.scene.add.text(512, 200, `Time left: ${this.typingGameTimeLeft}s`, {
-            fontFamily: 'Arial',
             fontSize: '20px',
             color: '#ffff00'
         }).setOrigin(0.5);
@@ -126,20 +125,17 @@ export class TypingGame {
         
         // Create title and instructions
         this.scene.add.text(512, 150, "COMPLETE THE REPORT", {
-            fontFamily: 'Arial',
             fontSize: '28px',
             color: '#ffffff'
         }).setOrigin(0.5);
         
         this.scene.add.text(512, 450, "Type the text above exactly as shown", {
-            fontFamily: 'Arial',
             fontSize: '18px',
             color: '#aaaaaa'
         }).setOrigin(0.5);
         
         // Add cancel button
         const cancelButton = this.scene.add.text(512, 500, "CANCEL", {
-            fontFamily: 'Arial',
             fontSize: '20px',
             color: '#ff5555',
             backgroundColor: '#550000',

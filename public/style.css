@@ -1,8 +1,16 @@
+@font-face {
+    font-family: 'PressStart2P';
+    src: url('assets/fonts/PressStart2P.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 body {
     margin: 0;
     padding: 0;
     color: rgba(255, 255, 255, 0.87);
     background-color: #000000;
+    font-family: 'PressStart2P', monospace;
 }
 
 #app {

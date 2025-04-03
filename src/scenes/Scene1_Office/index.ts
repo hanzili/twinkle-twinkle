@@ -1,10 +1,10 @@
-import { Scene } from 'phaser';
+import { BaseScene, EnergyLevel } from '../BaseScene';
 import { InteractionHandlers } from './InteractionHandlers';
 import { TypingGame } from './TypingGame';
 import { DialogSystem } from './DialogSystem';
 import { GameState } from './GameState';
 
-export class Scene1_Office extends Scene {
+export class Scene1_Office extends BaseScene {
     // Camera and background
     private camera: Phaser.Cameras.Scene2D.Camera;
     private background: Phaser.GameObjects.Image;
@@ -57,6 +57,9 @@ export class Scene1_Office extends Scene {
     }
     
     create() {
+        // Call parent create method to set up defaults including font override
+        super.create();
+        
         // Setup camera and background
         this.camera = this.cameras.main;
         this.camera.setBackgroundColor(0x333333);
@@ -66,7 +69,6 @@ export class Scene1_Office extends Scene {
         
         // Add clock showing 6:30 PM
         this.clock = this.add.text(900, 100, '6:30 PM', { 
-            fontFamily: 'Arial', 
             fontSize: '28px', 
             color: '#ffffff' 
         });
@@ -78,6 +80,12 @@ export class Scene1_Office extends Scene {
         this.dialog = new DialogSystem(this);
         this.interactions = new InteractionHandlers(this, this.dialog, this.gameState);
         this.typingGame = new TypingGame(this, this.dialog, this.gameState);
+        
+        // Initialize custom cursor using BaseScene method
+        this.initCursor();
+        
+        // Display the energy level (starting at LOW in the first scene)
+        this.showEnergyLevel(EnergyLevel.LOW);
         
         // Create interactive objects
         this.createInteractiveObjects();
@@ -151,7 +159,6 @@ export class Scene1_Office extends Scene {
         this.tutorialText = this.add.text(512, 100, 
             'Click on objects to interact with them. Complete your work before leaving.',
             { 
-                fontFamily: 'Arial', 
                 fontSize: '24px', 
                 color: '#ffffff',
                 align: 'center' 
@@ -162,7 +169,6 @@ export class Scene1_Office extends Scene {
         this.objectiveText = this.add.text(512, 50, 
             'Objective: Finish your work and prepare to leave the office',
             { 
-                fontFamily: 'Arial', 
                 fontSize: '20px', 
                 color: '#ffff00',
                 align: 'center' 
@@ -202,8 +208,10 @@ export class Scene1_Office extends Scene {
             duration: 1000,
             ease: 'Power2',
             onComplete: () => {
-                // Start next scene
-                this.scene.start('Scene2_Skytrain');
+                // Increase energy level to MEDIUM for the next scene
+                localStorage.setItem('playerEnergyLevel', EnergyLevel.MEDIUM);
+                // Use the BaseScene's transitionToScene method
+                this.transitionToScene('Scene2_Skytrain');
             }
         });
         

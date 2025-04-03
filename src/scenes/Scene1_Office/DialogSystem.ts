@@ -19,7 +19,6 @@ export class DialogSystem {
         if (!this.dialogBox) {
             this.dialogBox = this.scene.add.rectangle(512, 650, 900, 150, 0x000000, 0.8);
             this.dialogText = this.scene.add.text(512, 650, text, { 
-                fontFamily: 'Arial', 
                 fontSize: '24px', 
                 color: '#ffffff',
                 align: 'center',
@@ -37,7 +36,6 @@ export class DialogSystem {
             choices.forEach((choice, index) => {
                 const yPos = 700 + (index * 40);
                 const button = this.scene.add.text(512, yPos, choice, { 
-                    fontFamily: 'Arial', 
                     fontSize: '20px', 
                     color: '#ffff00',
                     backgroundColor: '#333333',
