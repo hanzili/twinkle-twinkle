@@ -102,21 +102,6 @@ export class DialogSystem {
                 this.hideDialog();
             });
         }
-        
-        // Debug - visualize dialog box bounds
-        // this.visualizeDialogBounds(dialogBox);
-    }
-    
-    // Debug helper to visualize bounds of dialog box
-    private visualizeDialogBounds(dialogBox: Phaser.GameObjects.Image): void {
-        const graphics = this.scene.add.graphics();
-        graphics.lineStyle(2, 0xffffff);
-        graphics.strokeRect(
-            dialogBox.x - dialogBox.displayWidth / 2,
-            dialogBox.y - dialogBox.displayHeight / 2,
-            dialogBox.displayWidth,
-            dialogBox.displayHeight
-        );
     }
     
     public hideDialog(): void {

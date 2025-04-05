@@ -1,147 +1,225 @@
-import { BaseScene, EnergyLevel } from './BaseScene';
+import { BaseScene } from './BaseScene';
+import { GameStateManager, Ending } from '../utils/GameStateManager';
+
+// Dialog type enum similar to other scenes
+enum DialogType {
+    NARRATION,
+    PROTAGONIST
+}
 
 export class Scene4_Ending extends BaseScene {
+    private gameState: GameStateManager;
     private background: Phaser.GameObjects.Image;
-    private endingTitle: Phaser.GameObjects.Text;
-    private endingDescription: Phaser.GameObjects.Text;
-    private mainMenuButton: Phaser.GameObjects.Text;
+    private restartButton: Phaser.GameObjects.Container;
+    
+    // Dialog elements
+    private narrationBox: Phaser.GameObjects.Image;
+    private protagonist: Phaser.GameObjects.Image;
+    private dialogText: Phaser.GameObjects.Text;
 
     constructor() {
         super('Scene4_Ending');
+        this.gameState = GameStateManager.getInstance();
     }
 
     preload() {
-        // Load any ending-specific assets
-        this.load.image('ending_bg', 'assets/background.png'); // Placeholder, reusing main background
+        // Load ending-specific background images
+        this.load.image('escape_ending_bg', 'assets/ending/escape-ending.png');
+        this.load.image('fun_ending_bg', 'assets/ending/fun-ending.png');
+        this.load.image('overachiever_ending_bg', 'assets/ending/overachiever-ending.png');
+        this.load.image('default_ending_bg', 'assets/office_background.png'); // Fallback background
+        this.load.image('button', 'assets/scene3/button.png');
+        
+        // Load dialog assets if not already loaded
+        if (!this.textures.exists('narration')) {
+            this.load.image('narration', 'assets/dialog/narration.png');
+        }
+        if (!this.textures.exists('protagonist')) {
+            this.load.image('protagonist', 'assets/dialog/protagonist.png');
+        }
     }
 
     create() {
         // Call parent create method to set up defaults including font override
         super.create();
         
-        const placeholderColor = 0x111111; // Dark color for ending
-        this.background = this.add.rectangle(512, 384, 1024, 768, placeholderColor) as any;
+        // Setup dimensions
+        const gameWidth = this.cameras.main.width;
+        const gameHeight = this.cameras.main.height;
+        const centerX = gameWidth / 2;
+        const centerY = gameHeight / 2;
+        
+        // Determine the ending based on player choices
+        const ending = this.gameState.determineEnding();
+        
+        // Add background based on ending type
+        this.background = this.add.image(centerX, centerY, this.getEndingBackground(ending))
+            .setDisplaySize(gameWidth, gameHeight)
+            .setDepth(0);
         
         // Initialize custom cursor
         this.initCursor();
         
-        // Display energy level (fully charged in the ending)
-        this.showEnergyLevel(EnergyLevel.HIGH);
+        // Set up dialog system
+        this.setupDialog();
         
-        // Determine which ending to show based on player choices
-        const playerChoices = JSON.parse(localStorage.getItem('playerChoices') || '{}');
-        const ending = this.determineEnding(playerChoices);
+        // Show ending dialog
+        this.showEndingDialog(ending);
         
-        // Display ending title
-        this.endingTitle = this.add.text(512, 200, ending.title, { 
-            fontSize: '42px', 
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 6,
-            align: 'center'
-        }).setOrigin(0.5);
+        // The restart button will be created after the dialog is dismissed
+    }
+    
+    private setupDialog() {
+        // Get scene dimensions for center positioning
+        const gameWidth = this.cameras.main.width;
+        const gameHeight = this.cameras.main.height;
+        const centerX = gameWidth / 2;
         
-        // Display ending description
-        this.endingDescription = this.add.text(512, 350, ending.description, { 
-            fontSize: '24px', 
-            color: '#ffffff',
-            align: 'center',
-            wordWrap: { width: 700 }
-        }).setOrigin(0.5);
+        // Position dialog boxes at the bottom third of the screen
+        const dialogY = gameHeight - 250;
         
-        // Display player's journey
-        this.add.text(512, 500, 'Your Journey Summary:', { 
-            fontSize: '20px', 
-            color: '#aaaaaa',
-            align: 'center'
-        }).setOrigin(0.5);
-        
-        // Format and display the choices
-        const choicesText = Object.entries(playerChoices)
-            .map(([key, value]) => `${key.replace('_', ' ')}: ${value}`)
-            .join('\n');
-        
-        this.add.text(512, 560, choicesText, { 
-            fontSize: '18px', 
-            color: '#aaaaaa',
-            align: 'center'
-        }).setOrigin(0.5);
-        
-        // Add button to return to main menu
-        this.mainMenuButton = this.add.text(512, 680, 'Return to Main Menu', { 
-            fontSize: '24px', 
-            color: '#ffffff',
-            backgroundColor: '#550000',
-            padding: { x: 20, y: 10 }
-        }).setOrigin(0.5)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerover', () => this.mainMenuButton.setBackgroundColor('#770000'))
-        .on('pointerout', () => this.mainMenuButton.setBackgroundColor('#550000'))
-        .on('pointerdown', () => {
-            // Reset player state
-            localStorage.removeItem('playerChoices');
-            localStorage.removeItem('playerEnergyLevel');
+        // Add narration box and protagonist image (initially hidden)
+        this.narrationBox = this.add.image(centerX, dialogY - 200, 'narration')
+            .setVisible(false)
+            .setScale(0.5)
+            .setDepth(100); // Ensure dialog appears above other elements
             
-            // Return to the main menu
-            this.transitionToScene('MainMenu');
+        this.protagonist = this.add.image(centerX, dialogY - 200, 'protagonist')
+            .setVisible(false)
+            .setScale(0.5)
+            .setDepth(100); // Ensure dialog appears above other elements
+            
+        // Add text field for dialog
+        this.dialogText = this.add.text(centerX, dialogY + 50, '', {
+            fontFamily: 'Courier New',
+            fontSize: '24px',
+            color: '#000000',
+            align: 'center',
+            wordWrap: { width: 1500 }
+        })
+        .setOrigin(0.5)
+        .setDepth(101)
+        .setVisible(false);
+    }
+    
+    private showDialog(text: string, type: DialogType, callback?: () => void): void {
+        // First hide any existing dialog elements
+        this.hideDialog();
+        
+        // Show appropriate dialog based on type
+        if (type === DialogType.NARRATION) {
+            this.narrationBox.setVisible(true);
+        } else {
+            this.protagonist.setVisible(true);
+        }
+        
+        // Update and show text
+        this.dialogText.setText(text);
+        this.dialogText.setVisible(true);
+        
+        // Create a click handler to dismiss the dialog
+        this.input.once('pointerdown', () => {
+            this.hideDialog();
+            if (callback) {
+                callback();
+            }
         });
     }
     
-    private determineEnding(choices: Record<string, string>): { title: string, description: string } {
-        // Count choices leading to each ending type
-        let safeCount = 0;
-        let overachieverCount = 0;
-        let freedomCount = 0;
-        let funnyCount = 0;
+    private hideDialog(): void {
+        // Hide dialog elements
+        this.narrationBox.setVisible(false);
+        this.protagonist.setVisible(false);
+        this.dialogText.setVisible(false);
+    }
+    
+    private showEndingDialog(ending: Ending): void {
+        // Combine the title and description into a single dialog
+        const combinedText = `${this.getEndingTitle(ending)}\n\n${this.getEndingDescription(ending)}`;
         
-        // Process fish tank choice
-        if (choices['fish_thought'] === 'safe') safeCount++;
-        else if (choices['fish_thought'] === 'overachiever') overachieverCount++;
-        else if (choices['fish_thought'] === 'freedom') freedomCount++;
-        else if (choices['fish_thought'] === 'funny') funnyCount++;
-        
-        // Process computer report choice
-        if (choices['computer'] === 'completed') overachieverCount++;
-        else if (choices['computer'] === 'skipped') freedomCount++;
-        
-        // Process phone call choice
-        if (choices['phone_call'] === 'block') freedomCount++;
-        else if (choices['phone_call'] === 'answer') overachieverCount++;
-        
-        // Determine ending based on highest count (with tiebreakers)
-        const counts = {
-            safe: safeCount,
-            overachiever: overachieverCount,
-            freedom: freedomCount,
-            funny: funnyCount
-        };
-        
-        const maxCount = Math.max(...Object.values(counts));
-        const ending = Object.keys(counts).find(key => counts[key as keyof typeof counts] === maxCount) || 'safe';
-        
-        // Return ending details
+        // Show combined text in a single dialog, and show the restart button when dialog is dismissed
+        this.showDialog(
+            combinedText,
+            DialogType.NARRATION,
+            () => {
+                // After dialog is dismissed, show the restart button
+                this.createRestartButton(
+                    this.cameras.main.width / 2, 
+                    this.cameras.main.height - 100
+                );
+            }
+        );
+    }
+    
+    private getEndingBackground(ending: Ending): string {
         switch (ending) {
-            case 'overachiever':
-                return {
-                    title: 'The Overachiever Ending',
-                    description: 'Kept grinding like a corporate mule; your KPI is a star.\n\nYou return to the office early the next day, report finished, ready for more work. Looking at the fish tank, you realize you are not so different from the fish - contained, but purposeful.'
-                };
-            case 'freedom':
-                return {
-                    title: 'The Freedom Ending',
-                    description: 'You chose freedom.\n\nYou went to the beach, watched the ocean and the stars at night. Birds are visible in the scene. "I wish I knew where the birds were going..."'
-                };
-            case 'funny':
-                return {
-                    title: 'The Funny Ending',
-                    description: 'You embraced your true nature...\n\nYou started taking off clothes, running to the zoo. You now live as a starfish at the aquarium, finally free from office life.'
-                };
-            case 'safe':
+            case Ending.CAREFREE:
+                return 'escape_ending_bg';
+            case Ending.BURNOUT:
+                return 'fun_ending_bg';
+            case Ending.WORKAHOLIC:
+                return 'overachiever_ending_bg';
+            case Ending.BALANCED:
             default:
-                return {
-                    title: 'The Safe Harbor Ending',
-                    description: 'You returned to your safe harbor.\n\nYou went home to rest; watched the new episode of The Fall Bikaru Alived and saw the stars.'
-                };
+                return 'default_ending_bg';
         }
+    }
+    
+    private getEndingTitle(ending: Ending): string {
+        switch (ending) {
+            case Ending.BALANCED:
+                return "The Balanced Life";
+            case Ending.WORKAHOLIC:
+                return "The Workaholic";
+            case Ending.CAREFREE:
+                return "The Free Spirit";
+            case Ending.BURNOUT:
+                return "The Burnout";
+            default:
+                return "The End";
+        }
+    }
+    
+    private getEndingDescription(ending: Ending): string {
+        switch (ending) {
+            case Ending.BALANCED:
+                return "You've found a healthy balance between work and personal life. Your career progresses steadily while you maintain good mental health.";
+            case Ending.WORKAHOLIC:
+                return "You've prioritized work above all else. Your career advances rapidly, but at what cost to your personal life?";
+            case Ending.CAREFREE:
+                return "You've chosen freedom and personal fulfillment over professional expectations. Life is enjoyable, though your career trajectory is uncertain.";
+            case Ending.BURNOUT:
+                return "You've pushed yourself too hard without proper self-care. The stress has caught up with you, leading to burnout.";
+            default:
+                return "Your journey has come to an end. Your choices have shaped your destiny.";
+        }
+    }
+    
+    private createRestartButton(x: number, y: number): void {
+        // Create button image
+        const buttonImg = this.add.image(0, 0, 'button').setScale(0.2);
+        
+        // Create text
+        const buttonText = this.add.text(0, 0, "Play Again", {
+            fontSize: '20px',
+            color: '#000000',
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        // Create container with button image and text
+        this.restartButton = this.add.container(x, y, [buttonImg, buttonText]);
+        
+        // Set size based on the button image for interaction
+        this.restartButton.setSize(buttonImg.displayWidth, buttonImg.displayHeight);
+        
+        // Make interactive
+        this.restartButton.setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => {
+                // Reset game state
+                this.gameState.resetState();
+                
+                // Return to main menu
+                this.transitionToScene('MainMenu');
+            });
     }
 } 

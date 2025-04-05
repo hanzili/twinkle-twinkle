@@ -1,7 +1,7 @@
 import { BaseScene, EnergyLevel } from '../BaseScene';
 import { InteractionHandlers } from './InteractionHandlers';
 import { TypingGame } from './TypingGame';
-import { DialogSystem } from './DialogSystem';
+import { DialogSystem, DialogType } from './DialogSystem';
 import { GameState } from './GameState';
 
 export class Scene1_Office extends BaseScene {
@@ -24,6 +24,9 @@ export class Scene1_Office extends BaseScene {
     private typingGame: TypingGame;
     private dialog: DialogSystem;
     private gameState: GameState;
+    
+    // Scene state
+    private initialDialogShown: boolean = false;
     
     constructor() {
         super('Scene1_Office');
@@ -76,8 +79,25 @@ export class Scene1_Office extends BaseScene {
             console.log('Ambient audio playback failed, continuing without sound');
         }
         
+        // Show initial dialog
+        this.showInitialDialog();
+        
         // Add development shortcut button to go directly to Scene2_Skytrain
         // this.createDevelopmentButton();
+    }
+    
+    private showInitialDialog(): void {
+        // First dialog - protagonist dialog
+        this.dialog.showDialog("Overtime again... It's already past 9 PM.", DialogType.PROTAGONIST, undefined, (choice) => {
+            // Show second dialog immediately after first is dismissed
+            setTimeout(() => {
+                this.dialog.showDialog(
+                    "This is so hard. There's still so much I'm not good at... How long will it take for me to finally get used to this job?", 
+                    DialogType.PROTAGONIST
+                );
+                this.initialDialogShown = true;
+            }, 100); // Small delay to ensure first dialog is fully dismissed
+        });
     }
     
     private setupNarration() {
