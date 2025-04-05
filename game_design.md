@@ -1,10 +1,10 @@
-# Office Escape - Game Plot
+# Twinkle Twinkle - Game Plot
 
 *A puzzle & visual novel game*
 
 ## Game Overview
 
-"Office Escape" follows a protagonist's journey as they leave work and navigate their commute home. Through various interactions and choices, players shape the protagonist's mindset and ultimate fate, leading to one of four possible endings.
+"Twinkle Twinkle" follows a protagonist's journey as they leave work and navigate their commute home. Through various interactions and choices, players shape the protagonist's mindset and ultimate fate, leading to one of four possible endings.
 
 ## Gameplay Scenes
 
