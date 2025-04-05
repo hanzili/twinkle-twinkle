@@ -37,6 +37,14 @@ export class Preloader extends BaseScene
         this.load.image('logo', 'logo.png');
         this.load.image('background', 'background.png');
         
+        // Load new start game screens
+        this.load.image('start-game-1', 'start-game/start-game-1.png');
+        this.load.image('start-game-2', 'start-game/start-game-2.png');
+        this.load.image('start-game-3', 'start-game/start-game-3.png');
+        this.load.image('start-game-4', 'start-game/start-game-4.png');
+        this.load.image('start-game-5', 'start-game/start-game-5.png');
+        this.load.image('start-game-button', 'start-game/start-game-button.png');
+        
         // Font preloading
         // WebFont.load is not built into Phaser, but we can make sure our custom font is loaded
         // through the CSS and check it here
