@@ -26,7 +26,7 @@ export class GameState {
     }
     
     public checkReadyToLeave(): void {
-        // Player must interact with computer and fish tank (mandatory) to be able to leave
+        // Player must interact with mini-game computer and fish tank (mandatory) to be able to leave
         if (this.interactedObjects.has('computer') && this.interactedObjects.has('fishtank')) {
             if (!this.isReadyToLeave) {
                 this.isReadyToLeave = true;

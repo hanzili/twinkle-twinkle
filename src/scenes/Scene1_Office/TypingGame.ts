@@ -50,7 +50,8 @@ export class TypingGame {
         this.dialog.hideDialog();
         
         // Set up typing game background (a computer screen overlay)
-        this.typingGameBackground = this.scene.add.rectangle(512, 384, 700, 400, 0x222222, 0.9);
+        this.typingGameBackground = this.scene.add.rectangle(512, 384, 700, 500, 0x000033, 0.95)
+            .setStrokeStyle(4, 0x3333aa);
         
         // Set of phrases to type - work-related sentences
         const phrases = [
@@ -66,8 +67,8 @@ export class TypingGame {
         
         // Create text display for target text - what the player needs to type
         this.typingGameText = this.scene.add.text(512, 300, this.typingTargetText, {
-            fontFamily: 'Courier',
-            fontSize: '24px',
+            fontFamily: 'PressStart2P',
+            fontSize: '16px',
             color: '#aaaaaa',
             align: 'center',
             wordWrap: { width: 600 }
@@ -75,8 +76,8 @@ export class TypingGame {
         
         // Create text display for user input - what the player has typed so far
         this.typingGameInput = this.scene.add.text(512, 350, '', {
-            fontFamily: 'Courier',
-            fontSize: '24px',
+            fontFamily: 'PressStart2P',
+            fontSize: '16px',
             color: '#ffffff'
         }).setOrigin(0.5);
         
@@ -85,7 +86,7 @@ export class TypingGame {
             512, 
             350, 
             2, 
-            24, 
+            16, 
             0xffffff
         );
         
@@ -102,7 +103,8 @@ export class TypingGame {
         
         // Create timer display
         this.typingGameTimer = this.scene.add.text(512, 200, `Time left: ${this.typingGameTimeLeft}s`, {
-            fontSize: '20px',
+            fontFamily: 'PressStart2P',
+            fontSize: '16px',
             color: '#ffff00'
         }).setOrigin(0.5);
         
@@ -125,21 +127,24 @@ export class TypingGame {
         
         // Create title and instructions
         this.scene.add.text(512, 150, "COMPLETE THE REPORT", {
-            fontSize: '28px',
+            fontFamily: 'PressStart2P',
+            fontSize: '20px',
             color: '#ffffff'
         }).setOrigin(0.5);
         
         this.scene.add.text(512, 450, "Type the text above exactly as shown", {
-            fontSize: '18px',
+            fontFamily: 'PressStart2P',
+            fontSize: '12px',
             color: '#aaaaaa'
         }).setOrigin(0.5);
         
         // Add cancel button
         const cancelButton = this.scene.add.text(512, 500, "CANCEL", {
-            fontSize: '20px',
+            fontFamily: 'PressStart2P',
+            fontSize: '16px',
             color: '#ff5555',
             backgroundColor: '#550000',
-            padding: { x: 10, y: 5 }
+            padding: { x: 20, y: 10 }
         })
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true })
@@ -180,6 +185,13 @@ export class TypingGame {
         // Add the key to the current text
         this.typingCurrentText += key;
         
+        // Play typing sound
+        try {
+            this.scene.sound.play('type');
+        } catch (e) {
+            console.log('Sound play failed, continuing without sound');
+        }
+        
         // Update the display
         this.updateTypingDisplay();
         
@@ -199,8 +211,31 @@ export class TypingGame {
         // If input field doesn't exist, exit
         if (!this.typingGameInput) return;
         
-        // Simply update the text of the input field
+        // Update the text of the input field
         this.typingGameInput.setText(this.typingCurrentText);
+        
+        // Color text based on correctness
+        const targetChars = this.typingTargetText.split('');
+        const inputChars = this.typingCurrentText.split('');
+        let coloredText = '';
+        
+        inputChars.forEach((char, index) => {
+            if (index < targetChars.length) {
+                if (char === targetChars[index]) {
+                    // Correct character - green
+                    coloredText += `<span style="color:#00ff00">${char}</span>`;
+                } else {
+                    // Incorrect character - red
+                    coloredText += `<span style="color:#ff0000">${char}</span>`;
+                }
+            } else {
+                // Extra character - red
+                coloredText += `<span style="color:#ff0000">${char}</span>`;
+            }
+        });
+        
+        // Update the text with colored version
+        this.typingGameInput.setText(coloredText);
         
         // Position the cursor at the end of the text
         if (this.typingGameCursor) {

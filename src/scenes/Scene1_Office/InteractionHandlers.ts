@@ -64,7 +64,7 @@ export class InteractionHandlers {
         if (!this.gameState.interactedObjects.has('computer')) {
             // Create a custom dialog box for the computer options
             const dialogBox = this.scene.add.rectangle(512, 650, 900, 180, 0x000000, 0.8);
-            const dialogText = this.scene.add.text(512, 620, "The work is never-ending...", { 
+            const dialogText = this.scene.add.text(512, 620, "Time to finish this report...", { 
                 fontSize: '24px', 
                 color: '#ffffff',
                 align: 'center',
@@ -73,7 +73,7 @@ export class InteractionHandlers {
             
             // Create the two options with clear visibility
             const choices = [
-                "Complete the report (start mini-game)",
+                "Start typing mini-game",
                 "Skip it for tomorrow"
             ];
             
@@ -95,7 +95,7 @@ export class InteractionHandlers {
                     // Clean up UI
                     this.cleanupCustomDialogs();
                     
-                    if (choice === "Complete the report (start mini-game)") {
+                    if (choice === "Start typing mini-game") {
                         // Start the typing mini-game
                         if (this.typingGame) {
                             this.typingGame.startReportMiniGame();
@@ -135,11 +135,11 @@ export class InteractionHandlers {
             console.log('Audio playback failed, continuing without sound');
         }
         
-        this.dialog.showDialog("This is the only thing keeping me awake right now", [
-            "Drink the rest",
+        this.dialog.showDialog("This coffee is the only thing keeping me awake", [
+            "Drink the coffee",
             "Leave it"
         ], (choice) => {
-            if (choice === "Drink the rest") {
+            if (choice === "Drink the coffee") {
                 this.drinkCoffee();
                 this.gameState.playerChoices['coffee'] = 'drink';
             } else {
@@ -166,7 +166,7 @@ export class InteractionHandlers {
             console.log('Audio playback failed, continuing without sound');
         }
         
-        this.dialog.showDialog("The plant is just like me…", [
+        this.dialog.showDialog("The plant looks thirsty...", [
             "Water the plant",
             "Ignore it"
         ], (choice) => {
@@ -174,74 +174,12 @@ export class InteractionHandlers {
                 this.waterPlant();
                 this.gameState.playerChoices['plant'] = 'water';
             } else {
-                this.dialog.showDialog("Maybe we're both beyond saving at this point");
+                this.dialog.showDialog("It'll survive another day without water");
                 this.gameState.playerChoices['plant'] = 'ignore';
             }
             
             // Mark as interacted
             this.gameState.interactedObjects.add('plant');
-            
-            // Check if player is ready to leave
-            this.gameState.checkReadyToLeave();
-        });
-    }
-    
-    public handleEyeMaskInteraction(): void {
-        // Hide any existing dialog first
-        this.dialog.hideDialog();
-        this.cleanupCustomDialogs();
-        
-        try {
-            this.scene.sound.play('click');
-        } catch (e) {
-            console.log('Audio playback failed, continuing without sound');
-        }
-        
-        this.dialog.showDialog("Perfect for 'resting' my eyes", [
-            "Try it on",
-            "Pack it away"
-        ], (choice) => {
-            if (choice === "Try it on") {
-                this.tryEyeMask();
-                this.gameState.playerChoices['eyemask'] = 'try';
-            } else {
-                this.dialog.showDialog("Better save this for the commute");
-                this.gameState.playerChoices['eyemask'] = 'pack';
-            }
-            
-            // Mark as interacted
-            this.gameState.interactedObjects.add('eyemask');
-            
-            // Check if player is ready to leave
-            this.gameState.checkReadyToLeave();
-        });
-    }
-    
-    public handleWaterBottleInteraction(): void {
-        // Hide any existing dialog first
-        this.dialog.hideDialog();
-        this.cleanupCustomDialogs();
-        
-        try {
-            this.scene.sound.play('click');
-        } catch (e) {
-            console.log('Audio playback failed, continuing without sound');
-        }
-        
-        this.dialog.showDialog("You're getting older after all...", [
-            "Brew goji berries",
-            "Drink plain water"
-        ], (choice) => {
-            if (choice === "Brew goji berries") {
-                this.brewGojiBerries();
-                this.gameState.playerChoices['water'] = 'goji';
-            } else {
-                this.dialog.showDialog("No time for health rituals today");
-                this.gameState.playerChoices['water'] = 'plain';
-            }
-            
-            // Mark as interacted
-            this.gameState.interactedObjects.add('water');
             
             // Check if player is ready to leave
             this.gameState.checkReadyToLeave();
@@ -260,27 +198,26 @@ export class InteractionHandlers {
         }
         
         if (!this.gameState.interactedObjects.has('fishtank')) {
-            // Create a taller dialog box to fit all four options
-            const dialogBox = this.scene.add.rectangle(512, 650, 900, 250, 0x000000, 0.8);
-            const dialogText = this.scene.add.text(512, 580, "The poor fish is trapped… just swimming in circles", { 
+            // Create a custom dialog for fish tank
+            const dialogBox = this.scene.add.rectangle(512, 650, 900, 180, 0x000000, 0.8);
+            const dialogText = this.scene.add.text(512, 620, "The fish is swimming in circles, just like my thoughts...", { 
                 fontSize: '24px', 
                 color: '#ffffff',
                 align: 'center',
                 wordWrap: { width: 850 }
             }).setOrigin(0.5);
             
-            // Create the four option buttons with more space between them
+            // Create choices
             const choices = [
-                "But at least it's safe and cared for",
-                "It's a comfortable prison, like this office",
-                "Still, it's doing what it's supposed to do",
-                "I wonder if fish dream of being something else"
+                "Feed the fish",
+                "Tap the glass",
+                "Just watch"
             ];
             
             const choiceButtons: Phaser.GameObjects.Text[] = [];
             
             choices.forEach((choice, index) => {
-                const yPos = 620 + (index * 35); // Reduced vertical spacing to fit all options
+                const yPos = 660 + (index * 40);
                 const button = this.scene.add.text(512, yPos, choice, { 
                     fontSize: '20px',
                     color: '#ffff00',
@@ -292,19 +229,19 @@ export class InteractionHandlers {
                 .on('pointerover', () => button.setColor('#ff0000'))
                 .on('pointerout', () => button.setColor('#ffff00'))
                 .on('pointerdown', () => {
-                    // Record choice based on selection
-                    if (choice.includes("safe and cared for")) {
-                        this.gameState.playerChoices['fish_thought'] = 'safe';
-                    } else if (choice.includes("comfortable prison")) {
-                        this.gameState.playerChoices['fish_thought'] = 'freedom';
-                    } else if (choice.includes("what it's supposed to do")) {
-                        this.gameState.playerChoices['fish_thought'] = 'overachiever';
-                    } else if (choice.includes("dream of being something else")) {
-                        this.gameState.playerChoices['fish_thought'] = 'funny';
-                    }
-                    
                     // Clean up UI
                     this.cleanupCustomDialogs();
+                    
+                    if (choice === "Feed the fish") {
+                        this.dialog.showDialog("I sprinkle some food for the fish. At least one of us is getting fed properly today.");
+                        this.gameState.playerChoices['fishtank'] = 'feed';
+                    } else if (choice === "Tap the glass") {
+                        this.dialog.showDialog("I tap on the glass. The fish darts away. I shouldn't disturb it.");
+                        this.gameState.playerChoices['fishtank'] = 'tap';
+                    } else {
+                        this.dialog.showDialog("I watch the fish move back and forth. There's something calming about it.");
+                        this.gameState.playerChoices['fishtank'] = 'watch';
+                    }
                     
                     // Mark as interacted
                     this.gameState.interactedObjects.add('fishtank');
@@ -313,7 +250,6 @@ export class InteractionHandlers {
                     this.gameState.checkReadyToLeave();
                 });
                 
-                // Store the button for later cleanup
                 choiceButtons.push(button);
             });
             
@@ -324,7 +260,7 @@ export class InteractionHandlers {
                 buttons: choiceButtons
             };
         } else {
-            this.dialog.showDialog("The fish seems content after being fed.");
+            this.dialog.showDialog("The fish seems content after our interaction.");
         }
     }
     
@@ -332,16 +268,7 @@ export class InteractionHandlers {
     private drinkCoffee(): void {
         const objects = this.scene.getSceneObjects();
         
-        // Show drinking animation or effect
-        this.scene.tweens.add({
-            targets: objects.icedCoffee,
-            alpha: 0.3,
-            y: '-=10',
-            duration: 1000,
-            ease: 'Power2'
-        });
-        
-        // Brighten screen slightly to show energy boost
+        // Use camera effects instead of sprite animations
         this.scene.tweens.add({
             targets: objects.camera,
             brightness: 1.2,
@@ -355,56 +282,9 @@ export class InteractionHandlers {
     }
     
     private waterPlant(): void {
-        const objects = this.scene.getSceneObjects();
-        
-        // Show watering animation or visual cue
-        this.scene.tweens.add({
-            targets: objects.pottedPlant,
-            scale: 1.1,
-            duration: 1000,
-            ease: 'Power1',
-            onComplete: () => {
-                this.dialog.showDialog("At least one of us is getting proper care");
-            }
-        });
-    }
-    
-    private tryEyeMask(): void {
-        // Screen goes dark briefly
-        const darkOverlay = this.scene.add.rectangle(512, 384, 1024, 768, 0x000000);
-        
-        // Brief dream sequence
-        this.scene.time.delayedCall(1000, () => {
-            // Show brief dream imagery and then fade back
-            this.dialog.showDialog("*You drift into a momentary daydream*");
-            
-            // Fade back after 5 seconds
-            this.scene.time.delayedCall(3000, () => {
-                darkOverlay.destroy();
-                this.dialog.showDialog("That was nice... but back to reality.");
-            });
-        });
-    }
-    
-    private brewGojiBerries(): void {
-        const objects = this.scene.getSceneObjects();
-        
-        // Visual of berries being added to water
-        const gojiBerries = this.scene.add.image(objects.waterBottle.x + 20, objects.waterBottle.y - 20, 'goji_berries');
-        
-        // Animation of berries going into bottle
-        this.scene.tweens.add({
-            targets: gojiBerries,
-            x: objects.waterBottle.x,
-            y: objects.waterBottle.y,
-            alpha: 0,
-            duration: 1000,
-            ease: 'Power2',
-            onComplete: () => {
-                // Change water bottle color to reddish
-                objects.waterBottle.setTint(0xff9999);
-                this.dialog.showDialog("Health before everything else");
-            }
+        // Visual feedback through dialog only
+        this.scene.time.delayedCall(500, () => {
+            this.dialog.showDialog("The plant perks up a bit. It looks happier now.");
         });
     }
 } 

@@ -45,6 +45,15 @@ export class Preloader extends BaseScene
         this.load.image('start-game-5', 'start-game/start-game-5.png');
         this.load.image('start-game-button', 'start-game/start-game-button.png');
         
+        // New office scene assets
+        this.load.image('office_background', 'scene1/background.png');
+        this.load.image('coffee', 'scene1/coffee.png');
+        this.load.image('fish-tank', 'scene1/fish-tank.png');
+        this.load.image('plant', 'scene1/plant.png'); 
+        this.load.image('mini-game', 'scene1/mini-game.png');
+        this.load.image('narration', 'scene1/narration.png');
+        this.load.image('protagonist', 'scene1/protagonist.png');
+        
         // Font preloading
         // WebFont.load is not built into Phaser, but we can make sure our custom font is loaded
         // through the CSS and check it here
@@ -63,7 +72,6 @@ export class Preloader extends BaseScene
         this.load.image('office_bg', 'office_background.png');
         this.load.image('computer', 'computer.png');
         this.load.image('iced_coffee', 'iced_coffee.png');
-        this.load.image('plant', 'potted_plant.png');
         this.load.image('eye_mask', 'eye_mask.png');
         this.load.image('water_bottle', 'water_bottle.png');
         this.load.image('fishtank', 'fishtank.png');

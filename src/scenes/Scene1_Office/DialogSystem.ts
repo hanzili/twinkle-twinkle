@@ -1,8 +1,7 @@
 import { Scene1_Office } from './index';
 
 export class DialogSystem {
-    private dialogBox: Phaser.GameObjects.Rectangle;
-    private dialogText: Phaser.GameObjects.Text;
+    private dialogText?: Phaser.GameObjects.Text;
     private currentChoiceButtons: Phaser.GameObjects.Text[] = [];
     
     private scene: Scene1_Office;
@@ -15,33 +14,34 @@ export class DialogSystem {
         // First, clear any existing dialog boxes or choice buttons
         this.hideDialog();
         
-        // Create or show dialog box
-        if (!this.dialogBox) {
-            this.dialogBox = this.scene.add.rectangle(512, 650, 900, 150, 0x000000, 0.8);
-            this.dialogText = this.scene.add.text(512, 650, text, { 
-                fontSize: '24px', 
-                color: '#ffffff',
-                align: 'center',
-                wordWrap: { width: 850 }
-            }).setOrigin(0.5);
-        } else {
-            this.dialogBox.setVisible(true);
-            this.dialogText.setText(text).setVisible(true);
-        }
+        // Show the narration elements (narration box and protagonist)
+        this.scene.showNarration(true);
         
-        // If there are choices, display them
+        // Get the narration box position for text positioning
+        const sceneObjects = this.scene.getSceneObjects();
+        const narrationBox = sceneObjects.narrator;
+        
+        // Create dialog text positioned on the narration box
+        this.dialogText = this.scene.add.text(narrationBox.x + 100, narrationBox.y, text, { 
+            fontSize: '24px', 
+            color: '#ffffff',
+            align: 'left',
+            wordWrap: { width: 550 }
+        }).setOrigin(0, 0.5);
+        
+        // If there are choices, display them below the text
         if (choices && choices.length > 0) {
             const choiceButtons: Phaser.GameObjects.Text[] = [];
             
             choices.forEach((choice, index) => {
-                const yPos = 700 + (index * 40);
-                const button = this.scene.add.text(512, yPos, choice, { 
+                const yPos = narrationBox.y + 50 + (index * 40);
+                const button = this.scene.add.text(narrationBox.x + 120, yPos, choice, { 
                     fontSize: '20px', 
                     color: '#ffff00',
                     backgroundColor: '#333333',
                     padding: { x: 10, y: 5 }
                 })
-                .setOrigin(0.5)
+                .setOrigin(0, 0.5)
                 .setInteractive({ useHandCursor: true })
                 .on('pointerover', () => button.setColor('#ff0000'))
                 .on('pointerout', () => button.setColor('#ffff00'))
@@ -74,10 +74,13 @@ export class DialogSystem {
     }
     
     public hideDialog(): void {
-        // Hide the dialog box and text
-        if (this.dialogBox && this.dialogText) {
-            this.dialogBox.setVisible(false);
-            this.dialogText.setVisible(false);
+        // Hide the narration elements
+        this.scene.showNarration(false);
+        
+        // Destroy the dialog text
+        if (this.dialogText) {
+            this.dialogText.destroy();
+            this.dialogText = undefined;
         }
         
         // Remove any existing choice buttons

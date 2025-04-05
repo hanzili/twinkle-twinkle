@@ -9,18 +9,18 @@ export class Scene1_Office extends BaseScene {
     private camera: Phaser.Cameras.Scene2D.Camera;
     private background: Phaser.GameObjects.Image;
     
-    // Interactive objects
-    private computer: Phaser.GameObjects.Sprite;
-    private icedCoffee: Phaser.GameObjects.Sprite;
-    private pottedPlant: Phaser.GameObjects.Sprite;
-    private eyeMask: Phaser.GameObjects.Sprite;
-    private waterBottle: Phaser.GameObjects.Sprite;
-    private fishTank: Phaser.GameObjects.Sprite;
+    // Interactive objects - using generic GameObject to allow for rectangles
+    private miniGame: Phaser.GameObjects.GameObject;
+    private coffee: Phaser.GameObjects.GameObject;
+    private plant: Phaser.GameObjects.GameObject;
+    private fishTank: Phaser.GameObjects.GameObject;
+    
+    // Narration elements
+    private narrationBox: Phaser.GameObjects.Image;
+    private protagonist: Phaser.GameObjects.Image;
     
     // UI elements
-    private clock: Phaser.GameObjects.Text;
     private tutorialText: Phaser.GameObjects.Text;
-    private objectiveText: Phaser.GameObjects.Text;
     
     // Components
     private interactions: InteractionHandlers;
@@ -33,27 +33,8 @@ export class Scene1_Office extends BaseScene {
     }
     
     preload() {
-        // Load scene assets
-        this.load.image('office_bg', 'assets/office_background.png');
-        this.load.image('computer', 'assets/computer.png');
-        this.load.image('iced_coffee', 'assets/iced_coffee.png');
-        this.load.image('plant', 'assets/potted_plant.png');
-        this.load.image('eye_mask', 'assets/eye_mask.png');
-        this.load.image('water_bottle', 'assets/water_bottle.png');
-        this.load.image('fishtank', 'assets/fishtank.png');
-        this.load.image('fish', 'assets/fish.png');
-        this.load.image('goji_berries', 'assets/goji_berries.png');
-        
-        // Load animation frames
-        this.load.spritesheet('fish_animation', 'assets/fish_animation.png', { 
-            frameWidth: 64, 
-            frameHeight: 32 
-        });
-        
-        // Load audio
-        this.load.audio('click', 'assets/click.mp3');
-        this.load.audio('type', 'assets/typing.mp3');
-        this.load.audio('ambient_office', 'assets/ambient_office.mp3');
+        // Scene1_Office specific assets can be loaded here if needed
+        // Most assets are already loaded in the Preloader
     }
     
     create() {
@@ -62,19 +43,20 @@ export class Scene1_Office extends BaseScene {
         
         // Setup camera and background
         this.camera = this.cameras.main;
-        this.camera.setBackgroundColor(0x333333);
+        this.camera.setBackgroundColor(0x000000);
         
-        // Add office background
-        this.background = this.add.image(512, 384, 'office_bg');
-        
-        // Add clock showing 6:30 PM
-        this.clock = this.add.text(900, 100, '6:30 PM', { 
-            fontSize: '28px', 
-            color: '#ffffff' 
-        });
+        // Add office background filling the entire screen
+        // The background is the source of truth for item positions
+        const gameWidth = this.cameras.main.width;
+        const gameHeight = this.cameras.main.height;
+        this.background = this.add.image(gameWidth/2, gameHeight/2, 'office_background');
+        this.background.setDisplaySize(gameWidth, gameHeight);
         
         // Initialize game state
         this.gameState = new GameState(this);
+        
+        // Initialize narration components
+        this.setupNarration();
         
         // Initialize components
         this.dialog = new DialogSystem(this);
@@ -87,10 +69,10 @@ export class Scene1_Office extends BaseScene {
         // Display the energy level (starting at LOW in the first scene)
         this.showEnergyLevel(EnergyLevel.LOW);
         
-        // Create interactive objects
+        // Create interactive objects with new assets
         this.createInteractiveObjects();
         
-        // Setup tutorial and objective
+        // Setup tutorial (only the temporary info text)
         this.setupTutorial();
         
         // Setup ambient office sounds - wrapped in try/catch
@@ -101,76 +83,53 @@ export class Scene1_Office extends BaseScene {
         }
     }
     
+    private setupNarration() {
+        // Add narration box at the bottom of the screen (initially hidden)
+        const gameHeight = this.cameras.main.height;
+        this.narrationBox = this.add.image(960, gameHeight - 180, 'narration').setVisible(false);
+        
+        // Add protagonist image for dialog (initially hidden)
+        this.protagonist = this.add.image(400, gameHeight - 180, 'protagonist').setVisible(false);
+        
+        // Scale the narration elements appropriately
+        this.narrationBox.setScale(0.8);
+        this.protagonist.setScale(0.5);
+    }
+    
     private createInteractiveObjects() {
-        // Add computer with job report
-        this.computer = this.add.sprite(400, 350, 'computer')
-            .setInteractive({ useHandCursor: true })
+        // Create invisible clickable zones over where items appear in the background
+        
+        // Central computer/monitor - clickable area
+        this.miniGame = this.add.rectangle(960, 400, 300, 200, 0x000000, 0.01) as any;
+        this.miniGame.setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.interactions.handleComputerInteraction());
             
-        // Add iced coffee
-        this.icedCoffee = this.add.sprite(600, 300, 'iced_coffee')
-            .setInteractive({ useHandCursor: true })
+        // Coffee cup area - left side
+        this.coffee = this.add.rectangle(550, 500, 100, 100, 0x000000, 0.01) as any;
+        this.coffee.setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.interactions.handleCoffeeInteraction());
             
-        // Add potted plant
-        this.pottedPlant = this.add.sprite(700, 400, 'plant')
-            .setInteractive({ useHandCursor: true })
+        // Plant area - right side
+        this.plant = this.add.rectangle(1300, 500, 150, 150, 0x000000, 0.01) as any;
+        this.plant.setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.interactions.handlePlantInteraction());
             
-        // Add eye mask
-        this.eyeMask = this.add.sprite(300, 400, 'eye_mask')
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => this.interactions.handleEyeMaskInteraction());
-            
-        // Add water bottle and goji berries
-        this.waterBottle = this.add.sprite(550, 380, 'water_bottle')
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => this.interactions.handleWaterBottleInteraction());
-            
-        // Add fish tank (mandatory interaction)
-        this.fishTank = this.add.sprite(250, 300, 'fishtank')
-            .setInteractive({ useHandCursor: true })
+        // Fish tank area - left side
+        this.fishTank = this.add.rectangle(350, 350, 150, 150, 0x000000, 0.01) as any;
+        this.fishTank.setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.interactions.handleFishTankInteraction());
-        
-        try {
-            // Create fish animation
-            this.anims.create({
-                key: 'fish_swim',
-                frames: this.anims.generateFrameNumbers('fish_animation', { start: 0, end: 5 }),
-                frameRate: 8,
-                repeat: -1
-            });
-            
-            // Add the fish to the tank
-            const fish = this.add.sprite(250, 300, 'fish_animation')
-                .play('fish_swim');
-        } catch (e) {
-            console.error('Failed to create fish animation, using static fish instead', e);
-            // Fallback to static fish
-            const fish = this.add.sprite(250, 300, 'fish');
-        }
     }
     
     private setupTutorial() {
         // Create a semi-transparent black rectangle for tutorial text
-        const tutorialBg = this.add.rectangle(512, 100, 800, 80, 0x000000, 0.7);
+        const tutorialBg = this.add.rectangle(960, 150, 1200, 80, 0x000000, 0.7);
         
         // Add tutorial text
-        this.tutorialText = this.add.text(512, 100, 
+        this.tutorialText = this.add.text(960, 150, 
             'Click on objects to interact with them. Complete your work before leaving.',
             { 
                 fontSize: '24px', 
                 color: '#ffffff',
-                align: 'center' 
-            }
-        ).setOrigin(0.5);
-        
-        // Create objective text
-        this.objectiveText = this.add.text(512, 50, 
-            'Objective: Finish your work and prepare to leave the office',
-            { 
-                fontSize: '20px', 
-                color: '#ffff00',
                 align: 'center' 
             }
         ).setOrigin(0.5);
@@ -198,9 +157,9 @@ export class Scene1_Office extends BaseScene {
             ease: 'Power2'
         });
         
-        // Elevator door closing animation
-        const leftDoor = this.add.rectangle(412, 384, 200, 768, 0x333333).setAlpha(0);
-        const rightDoor = this.add.rectangle(612, 384, 200, 768, 0x333333).setAlpha(0);
+        // Elevator door closing animation - adjusted for 1920x1080
+        const leftDoor = this.add.rectangle(860, 540, 400, 1080, 0x333333).setAlpha(0);
+        const rightDoor = this.add.rectangle(1060, 540, 400, 1080, 0x333333).setAlpha(0);
         
         this.tweens.add({
             targets: [leftDoor, rightDoor],
@@ -217,14 +176,14 @@ export class Scene1_Office extends BaseScene {
         
         this.tweens.add({
             targets: leftDoor,
-            x: 512 - 100,
+            x: 960 - 200,
             duration: 2000,
             ease: 'Power2'
         });
         
         this.tweens.add({
             targets: rightDoor,
-            x: 512 + 100,
+            x: 960 + 200,
             duration: 2000,
             ease: 'Power2'
         });
@@ -233,14 +192,24 @@ export class Scene1_Office extends BaseScene {
     // Getters for components to access
     public getSceneObjects() {
         return {
-            computer: this.computer,
-            icedCoffee: this.icedCoffee,
-            pottedPlant: this.pottedPlant,
-            eyeMask: this.eyeMask,
-            waterBottle: this.waterBottle,
+            miniGame: this.miniGame,
+            coffee: this.coffee,
+            plant: this.plant,
             fishTank: this.fishTank,
+            narrator: this.narrationBox,
+            protagonist: this.protagonist,
             camera: this.camera,
             background: this.background
         };
+    }
+    
+    // Method to show the narration elements
+    public showNarration(visible: boolean) {
+        if (this.narrationBox) {
+            this.narrationBox.setVisible(visible);
+        }
+        if (this.protagonist) {
+            this.protagonist.setVisible(visible);
+        }
     }
 } 
