@@ -9,18 +9,15 @@ export class Scene1_Office extends BaseScene {
     private camera: Phaser.Cameras.Scene2D.Camera;
     private background: Phaser.GameObjects.Image;
     
-    // Interactive objects - using generic GameObject to allow for rectangles
-    private miniGame: Phaser.GameObjects.GameObject;
-    private coffee: Phaser.GameObjects.GameObject;
-    private plant: Phaser.GameObjects.GameObject;
-    private fishTank: Phaser.GameObjects.GameObject;
+    // Interactive objects - using zones instead of images
+    private computerZone: Phaser.GameObjects.Zone;
+    private coffeeZone: Phaser.GameObjects.Zone;
+    private plantZone: Phaser.GameObjects.Zone;
+    private fishTankZone: Phaser.GameObjects.Zone;
     
     // Narration elements
     private narrationBox: Phaser.GameObjects.Image;
     private protagonist: Phaser.GameObjects.Image;
-    
-    // UI elements
-    private tutorialText: Phaser.GameObjects.Text;
     
     // Components
     private interactions: InteractionHandlers;
@@ -69,11 +66,8 @@ export class Scene1_Office extends BaseScene {
         // Display the energy level (starting at LOW in the first scene)
         this.showEnergyLevel(EnergyLevel.LOW);
         
-        // Create interactive objects with new assets
+        // Create interactive objects with their actual sprites
         this.createInteractiveObjects();
-        
-        // Setup tutorial (only the temporary info text)
-        this.setupTutorial();
         
         // Setup ambient office sounds - wrapped in try/catch
         try {
@@ -84,64 +78,64 @@ export class Scene1_Office extends BaseScene {
     }
     
     private setupNarration() {
-        // Add narration box at the bottom of the screen (initially hidden)
+        // Get scene dimensions for center positioning
+        const gameWidth = this.cameras.main.width;
         const gameHeight = this.cameras.main.height;
-        this.narrationBox = this.add.image(960, gameHeight - 180, 'narration').setVisible(false);
+        const centerX = gameWidth / 2;
         
-        // Add protagonist image for dialog (initially hidden)
-        this.protagonist = this.add.image(400, gameHeight - 180, 'protagonist').setVisible(false);
+        // Position dialog boxes at the bottom third of the screen rather than center
+        // This keeps them from obscuring the main gameplay area
+        const dialogY = gameHeight - 450;
+
+        console.log(centerX, dialogY);
         
-        // Scale the narration elements appropriately
-        this.narrationBox.setScale(0.8);
-        this.protagonist.setScale(0.5);
+        // Add narration box and protagonist image (initially hidden)
+        this.narrationBox = this.add.image(centerX, dialogY, 'narration')
+            .setVisible(false)
+            .setScale(0.5)
+            .setDepth(100); // Ensure dialog appears above other elements
+            
+        this.protagonist = this.add.image(centerX, dialogY, 'protagonist')
+            .setVisible(false)
+            .setScale(0.5)
+            .setDepth(100); // Ensure dialog appears above other elements
     }
     
     private createInteractiveObjects() {
-        // Create invisible clickable zones over where items appear in the background
+        // Create interactive zones on top of the background image
+        // The background already has the visual elements, we just need to make them interactive
         
-        // Central computer/monitor - clickable area
-        this.miniGame = this.add.rectangle(960, 400, 300, 200, 0x000000, 0.01) as any;
-        this.miniGame.setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => this.interactions.handleComputerInteraction());
-            
-        // Coffee cup area - left side
-        this.coffee = this.add.rectangle(550, 500, 100, 100, 0x000000, 0.01) as any;
-        this.coffee.setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => this.interactions.handleCoffeeInteraction());
-            
-        // Plant area - right side
-        this.plant = this.add.rectangle(1300, 500, 150, 150, 0x000000, 0.01) as any;
-        this.plant.setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => this.interactions.handlePlantInteraction());
-            
-        // Fish tank area - left side
-        this.fishTank = this.add.rectangle(350, 350, 150, 150, 0x000000, 0.01) as any;
-        this.fishTank.setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => this.interactions.handleFishTankInteraction());
+        // Central computer/monitor zone
+        this.computerZone = this.add.zone(800, 320, 300, 250).setInteractive({ useHandCursor: true });
+        this.computerZone.on('pointerdown', () => this.interactions.handleComputerInteraction());
+        
+        // Coffee cup zone
+        this.coffeeZone = this.add.zone(660, 700, 100, 100).setInteractive({ useHandCursor: true });
+        this.coffeeZone.on('pointerdown', () => this.interactions.handleCoffeeInteraction());
+        
+        // Plant zone
+        this.plantZone = this.add.zone(350, 500, 150, 200).setInteractive({ useHandCursor: true });
+        this.plantZone.on('pointerdown', () => this.interactions.handlePlantInteraction());
+        
+        // Fish tank zone
+        this.fishTankZone = this.add.zone(1700, 600, 150, 200).setInteractive({ useHandCursor: true });
+        this.fishTankZone.on('pointerdown', () => this.interactions.handleFishTankInteraction());
+        
+        // Visualize the zones during development (comment out for production)
+        this.visualizeZones([this.computerZone, this.coffeeZone, this.plantZone, this.fishTankZone]);
     }
     
-    private setupTutorial() {
-        // Create a semi-transparent black rectangle for tutorial text
-        const tutorialBg = this.add.rectangle(960, 150, 1200, 80, 0x000000, 0.7);
-        
-        // Add tutorial text
-        this.tutorialText = this.add.text(960, 150, 
-            'Click on objects to interact with them. Complete your work before leaving.',
-            { 
-                fontSize: '24px', 
-                color: '#ffffff',
-                align: 'center' 
-            }
-        ).setOrigin(0.5);
-        
-        // Make tutorial disappear after 5 seconds
-        this.time.delayedCall(5000, () => {
-            this.tweens.add({
-                targets: [tutorialBg, this.tutorialText],
-                alpha: 0,
-                duration: 1000,
-                ease: 'Power2'
-            });
+    // Helper method to visualize interaction zones during development
+    private visualizeZones(zones: Phaser.GameObjects.Zone[]) {
+        zones.forEach(zone => {
+            const graphics = this.add.graphics();
+            graphics.lineStyle(2, 0xff0000);
+            graphics.strokeRect(
+                zone.x - zone.width / 2, 
+                zone.y - zone.height / 2, 
+                zone.width, 
+                zone.height
+            );
         });
     }
     
@@ -192,24 +186,14 @@ export class Scene1_Office extends BaseScene {
     // Getters for components to access
     public getSceneObjects() {
         return {
-            miniGame: this.miniGame,
-            coffee: this.coffee,
-            plant: this.plant,
-            fishTank: this.fishTank,
+            computerZone: this.computerZone,
+            coffeeZone: this.coffeeZone,
+            plantZone: this.plantZone,
+            fishTankZone: this.fishTankZone,
             narrator: this.narrationBox,
             protagonist: this.protagonist,
             camera: this.camera,
             background: this.background
         };
-    }
-    
-    // Method to show the narration elements
-    public showNarration(visible: boolean) {
-        if (this.narrationBox) {
-            this.narrationBox.setVisible(visible);
-        }
-        if (this.protagonist) {
-            this.protagonist.setVisible(visible);
-        }
     }
 } 

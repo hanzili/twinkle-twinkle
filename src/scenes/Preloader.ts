@@ -32,10 +32,6 @@ export class Preloader extends BaseScene
     {
         //  Load the assets for the game
         this.load.setPath('assets');
-
-        // Original assets
-        this.load.image('logo', 'logo.png');
-        this.load.image('background', 'background.png');
         
         // Load new start game screens
         this.load.image('start-game-1', 'start-game/start-game-1.png');
@@ -51,8 +47,9 @@ export class Preloader extends BaseScene
         this.load.image('fish-tank', 'scene1/fish-tank.png');
         this.load.image('plant', 'scene1/plant.png'); 
         this.load.image('mini-game', 'scene1/mini-game.png');
-        this.load.image('narration', 'scene1/narration.png');
-        this.load.image('protagonist', 'scene1/protagonist.png');
+        this.load.image('typing-background', 'scene1/typing-background.png');
+        this.load.image('narration', 'dialog/narration.png');
+        this.load.image('protagonist', 'dialog/protagonist.png');
         
         // Font preloading
         // WebFont.load is not built into Phaser, but we can make sure our custom font is loaded
@@ -68,28 +65,12 @@ export class Preloader extends BaseScene
         // Check font after a brief delay to allow for CSS loading
         this.time.delayedCall(500, fontLoadedCheck);
         
-        // Office Escape game assets
-        this.load.image('office_bg', 'office_background.png');
-        this.load.image('computer', 'computer.png');
-        this.load.image('iced_coffee', 'iced_coffee.png');
-        this.load.image('eye_mask', 'eye_mask.png');
-        this.load.image('water_bottle', 'water_bottle.png');
-        this.load.image('fishtank', 'fishtank.png');
-        this.load.image('fish', 'fish.png');
-        this.load.image('goji_berries', 'goji_berries.png');
-        this.load.image('skytrain_bg', 'skytrain_background.png');
-        
         // Energy level icons
         this.load.image('energy-empty', 'energy-bar/energy-empty.png');
         this.load.image('energy-low', 'energy-bar/energy-low.png');
         this.load.image('energy-medium', 'energy-bar/energy-medium.png');
         this.load.image('energy-high', 'energy-bar/energy-high.png');
-        
-        // Animation spritesheets
-        this.load.spritesheet('fish_animation', 'fish_animation.png', { 
-            frameWidth: 64, 
-            frameHeight: 32 
-        });
+    
         
         // Sound effects
         this.load.audio('click', 'click.mp3');

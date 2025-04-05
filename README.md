@@ -1,10 +1,10 @@
-# Office Escape
+# Twinkle Twinkle
 
 *A narrative puzzle game about a late night at the office and the choices that define us*
 
 ## Game Overview
 
-"Office Escape" is a narrative-driven game that follows a protagonist's journey as they prepare to leave work and navigate their commute home. Through various interactions and choices, players shape the protagonist's mindset and ultimate fate, leading to one of four possible endings.
+"Twinkle Twinkle" is a narrative-driven game that follows a protagonist's journey as they prepare to leave work and navigate their commute home. Through various interactions and choices, players shape the protagonist's mindset and ultimate fate, leading to one of four possible endings.
 
 The game explores themes of work-life balance, personal identity, and the small decisions that collectively define our lives. As the protagonist progresses from office to home, their energy level gradually increases, symbolizing the recharged spirit away from work.
 

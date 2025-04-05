@@ -1,26 +1,21 @@
 import { Scene1_Office } from './index';
-import { DialogSystem } from './DialogSystem';
+import { DialogSystem, DialogType } from './DialogSystem';
 import { GameState } from './GameState';
 import { InteractionHandlers } from './InteractionHandlers';
 
 export class TypingGame {
     // Typing mini-game properties
     private typingGameActive: boolean = false;
+    private typingGameBackground: Phaser.GameObjects.Image;
     private typingGameText: Phaser.GameObjects.Text;
-    private typingGameBackground: Phaser.GameObjects.Rectangle;
     private typingGameInput: Phaser.GameObjects.Text;
     private typingTargetText: string = '';
     private typingCurrentText: string = '';
-    private typingGameCursor: Phaser.GameObjects.Rectangle;
-    private typingGameCursorTimer: Phaser.Time.TimerEvent;
-    private typingGameTimeLeft: number = 30; // 30 seconds
-    private typingGameTimer: Phaser.GameObjects.Text;
-    private typingGameTimeEvent: Phaser.Time.TimerEvent;
-    private typingGameSuccessRate: number = 0.7; // 70% completion to succeed
     
     private scene: Scene1_Office;
     private dialog: DialogSystem;
     private gameState: GameState;
+    private originalBackgroundAlpha: number;
     
     constructor(scene: Scene1_Office, dialog: DialogSystem, gameState: GameState) {
         this.scene = scene;
@@ -36,22 +31,38 @@ export class TypingGame {
     public startReportMiniGame(): void {
         // Reset mini-game state
         this.typingGameActive = false;
-        this.typingGameTimeLeft = 30;
         this.typingCurrentText = '';
         
         // Clean up any existing elements
         if (this.typingGameBackground) this.typingGameBackground.destroy();
         if (this.typingGameText) this.typingGameText.destroy();
         if (this.typingGameInput) this.typingGameInput.destroy();
-        if (this.typingGameCursor) this.typingGameCursor.destroy();
-        if (this.typingGameTimer) this.typingGameTimer.destroy();
         
         // Hide dialog
         this.dialog.hideDialog();
         
-        // Set up typing game background (a computer screen overlay)
-        this.typingGameBackground = this.scene.add.rectangle(512, 384, 700, 500, 0x000033, 0.95)
-            .setStrokeStyle(4, 0x3333aa);
+        // Store original background alpha
+        const sceneObjects = this.scene.getSceneObjects();
+        this.originalBackgroundAlpha = sceneObjects.background.alpha;
+        
+        // Fade out the main scene background
+        this.scene.tweens.add({
+            targets: sceneObjects.background,
+            alpha: 0.2,
+            duration: 500,
+            ease: 'Power2'
+        });
+        
+        // Get screen dimensions
+        const gameWidth = this.scene.cameras.main.width;
+        const gameHeight = this.scene.cameras.main.height;
+        const centerX = gameWidth / 2;
+        const centerY = gameHeight / 2;
+        
+        // Set up typing game background (full screen image)
+        this.typingGameBackground = this.scene.add.image(centerX, centerY, 'typing-background')
+            .setDisplaySize(gameWidth, gameHeight)
+            .setDepth(10);
         
         // Set of phrases to type - work-related sentences
         const phrases = [
@@ -64,103 +75,91 @@ export class TypingGame {
         
         // Select a random phrase
         this.typingTargetText = phrases[Math.floor(Math.random() * phrases.length)];
+        console.log('Target text to type:', this.typingTargetText);
         
-        // Create text display for target text - what the player needs to type
-        this.typingGameText = this.scene.add.text(512, 300, this.typingTargetText, {
-            fontFamily: 'PressStart2P',
-            fontSize: '16px',
-            color: '#aaaaaa',
-            align: 'center',
-            wordWrap: { width: 600 }
-        }).setOrigin(0.5);
+        // Content area dimensions and positioning
+        const contentWidth = 800;
+        const contentStartY = centerY - 100;
         
-        // Create text display for user input - what the player has typed so far
-        this.typingGameInput = this.scene.add.text(512, 350, '', {
-            fontFamily: 'PressStart2P',
-            fontSize: '16px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
-        
-        // Create a simple blinking cursor
-        this.typingGameCursor = this.scene.add.rectangle(
-            512, 
-            350, 
-            2, 
-            16, 
-            0xffffff
-        );
-        
-        // Make cursor blink
-        this.typingGameCursorTimer = this.scene.time.addEvent({
-            delay: 500,
-            callback: () => {
-                if (this.typingGameCursor) {
-                    this.typingGameCursor.visible = !this.typingGameCursor.visible;
-                }
-            },
-            loop: true
-        });
-        
-        // Create timer display
-        this.typingGameTimer = this.scene.add.text(512, 200, `Time left: ${this.typingGameTimeLeft}s`, {
-            fontFamily: 'PressStart2P',
-            fontSize: '16px',
-            color: '#ffff00'
-        }).setOrigin(0.5);
-        
-        // Start the countdown timer
-        this.typingGameTimeEvent = this.scene.time.addEvent({
-            delay: 1000,
-            callback: () => {
-                this.typingGameTimeLeft--;
-                if (this.typingGameTimer) {
-                    this.typingGameTimer.setText(`Time left: ${this.typingGameTimeLeft}s`);
-                }
-                
-                // Time's up!
-                if (this.typingGameTimeLeft <= 0) {
-                    this.endTypingGame(false);
-                }
-            },
-            repeat: this.typingGameTimeLeft
-        });
-        
-        // Create title and instructions
-        this.scene.add.text(512, 150, "COMPLETE THE REPORT", {
-            fontFamily: 'PressStart2P',
+        // Create text display for target text (gray) - aligned left, at top of content
+        this.typingGameText = this.scene.add.text(centerX - contentWidth/2 + 40, contentStartY, this.typingTargetText, {
+            fontFamily: 'Courier New',
             fontSize: '20px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
+            color: '#888888',
+            align: 'left',
+            wordWrap: { width: contentWidth - 80 }
+        })
+        .setOrigin(0, 0)
+        .setDepth(11);
         
-        this.scene.add.text(512, 450, "Type the text above exactly as shown", {
-            fontFamily: 'PressStart2P',
-            fontSize: '12px',
-            color: '#aaaaaa'
-        }).setOrigin(0.5);
+        // Create text display for user input - positioned directly below target text
+        const textHeight = this.typingGameText.height;
+        this.typingGameInput = this.scene.add.text(centerX - contentWidth/2 + 40, contentStartY + 40 + textHeight, '', {
+            fontFamily: 'Courier New',
+            fontSize: '22px',
+            color: '#000000',
+            align: 'left',
+            wordWrap: { width: contentWidth - 80 }
+        })
+        .setOrigin(0, 0)
+        .setDepth(11);
         
-        // Add cancel button
-        const cancelButton = this.scene.add.text(512, 500, "CANCEL", {
-            fontFamily: 'PressStart2P',
-            fontSize: '16px',
-            color: '#ff5555',
-            backgroundColor: '#550000',
-            padding: { x: 20, y: 10 }
+        // Add a placeholder to show where text will appear
+        this.typingGameInput.setText('|');
+        
+        // Create instructions - centered at bottom of content area
+        const instructions = this.scene.add.text(centerX, centerY + 130, "Type the text above exactly as shown", {
+            fontFamily: 'Courier New',
+            fontSize: '14px',
+            color: '#ffffff',
+            align: 'center'
         })
         .setOrigin(0.5)
+        .setDepth(11);
+        
+        // Add cancel button
+        const cancelButton = this.scene.add.rectangle(
+            centerX,
+            centerY + 170,
+            80, 
+            30,
+            0x000000
+        )
+        .setDepth(11)
         .setInteractive({ useHandCursor: true })
-        .on('pointerover', () => cancelButton.setBackgroundColor('#770000'))
-        .on('pointerout', () => cancelButton.setBackgroundColor('#550000'))
+        .on('pointerover', () => cancelButton.fillColor = 0x333333)
+        .on('pointerout', () => cancelButton.fillColor = 0x000000)
         .on('pointerdown', () => {
             this.endTypingGame(false);
         });
         
-        // Enable keyboard input
+        // Add text to cancel button
+        const cancelText = this.scene.add.text(centerX, centerY + 170, "CANCEL", {
+            fontFamily: 'Arial',
+            fontSize: '12px',
+            color: '#ffffff',
+            fontStyle: 'bold'
+        })
+        .setOrigin(0.5)
+        .setDepth(12);
+        
+        // Enable keyboard input - make sure we're using the main keyboard plugin
         if (this.scene.input && this.scene.input.keyboard) {
+            console.log('Setting up keyboard input');
+            this.scene.input.keyboard.enabled = true;
             this.scene.input.keyboard.on('keydown', this.handleTypingKeypress, this);
+            
+            // Try to ensure the game has focus
+            if (this.scene.game.canvas) {
+                this.scene.game.canvas.focus();
+            }
+        } else {
+            console.error('Keyboard input not available');
         }
         
         // Mark game as active
         this.typingGameActive = true;
+        console.log('Typing game started, ready for input');
     }
     
     private handleTypingKeypress(event: KeyboardEvent): void {
@@ -169,6 +168,7 @@ export class TypingGame {
         
         // Get the key pressed
         const key = event.key;
+        console.log('Key pressed:', key);
         
         // Handle backspace
         if (key === 'Backspace') {
@@ -177,13 +177,17 @@ export class TypingGame {
             return;
         }
         
-        // Ignore non-printable characters (except space)
-        if (key.length !== 1 && key !== ' ') {
+        // Ignore certain non-printable characters
+        if (key === 'Shift' || key === 'Control' || key === 'Alt' || 
+            key === 'CapsLock' || key === 'Tab' || key === 'Escape' ||
+            key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight') {
             return;
         }
         
-        // Add the key to the current text
-        this.typingCurrentText += key;
+        // For all other keys, add to the current text
+        if (key.length === 1 || key === ' ' || key === 'Enter') {
+            this.typingCurrentText += key;
+        }
         
         // Play typing sound
         try {
@@ -196,14 +200,8 @@ export class TypingGame {
         this.updateTypingDisplay();
         
         // Check if player has completed the phrase
-        if (this.typingCurrentText.length >= this.typingTargetText.length) {
-            // Calculate accuracy
-            const accuracy = this.calculateTypingAccuracy();
-            
-            // End game with success if accuracy is above threshold
-            if (accuracy >= this.typingGameSuccessRate) {
-                this.endTypingGame(true);
-            }
+        if (this.typingCurrentText === this.typingTargetText) {
+            this.endTypingGame(true);
         }
     }
     
@@ -211,99 +209,68 @@ export class TypingGame {
         // If input field doesn't exist, exit
         if (!this.typingGameInput) return;
         
-        // Update the text of the input field
-        this.typingGameInput.setText(this.typingCurrentText);
+        // Make sure empty input shows a cursor character
+        const displayText = this.typingCurrentText || '|';
         
-        // Color text based on correctness
-        const targetChars = this.typingTargetText.split('');
-        const inputChars = this.typingCurrentText.split('');
-        let coloredText = '';
+        // Display the current input text with word wrapping
+        this.typingGameInput.setText(displayText);
         
-        inputChars.forEach((char, index) => {
-            if (index < targetChars.length) {
-                if (char === targetChars[index]) {
-                    // Correct character - green
-                    coloredText += `<span style="color:#00ff00">${char}</span>`;
-                } else {
-                    // Incorrect character - red
-                    coloredText += `<span style="color:#ff0000">${char}</span>`;
-                }
-            } else {
-                // Extra character - red
-                coloredText += `<span style="color:#ff0000">${char}</span>`;
-            }
-        });
+        // Make sure text is visible with high contrast
+        this.typingGameInput.setColor('#000000');
+        this.typingGameInput.setFontSize(22); // Larger font for better visibility
         
-        // Update the text with colored version
-        this.typingGameInput.setText(coloredText);
-        
-        // Position the cursor at the end of the text
-        if (this.typingGameCursor) {
-            // Get the width of the current input text
-            const bounds = this.typingGameInput.getBounds();
-            const textWidth = bounds.width;
-            
-            // Position cursor just after the last character
-            this.typingGameCursor.x = this.typingGameInput.x + (textWidth / 2) + 1;
-            this.typingGameCursor.y = this.typingGameInput.y;
-        }
-    }
-    
-    private calculateTypingAccuracy(): number {
-        // Count correct characters
-        let correctChars = 0;
-        const targetChars = this.typingTargetText.split('');
-        const inputChars = this.typingCurrentText.split('');
-        
-        inputChars.forEach((char, index) => {
-            if (index < targetChars.length && char === targetChars[index]) {
-                correctChars++;
-            }
-        });
-        
-        // Calculate percentage correct
-        return correctChars / this.typingTargetText.length;
+        // Log for debugging
+        console.log('Current typed text:', this.typingCurrentText);
     }
     
     private endTypingGame(success: boolean): void {
         // Stop the typing game
         this.typingGameActive = false;
         
+        // Get scene objects for restoring background
+        const sceneObjects = this.scene.getSceneObjects();
+        
+        // Restore the original background alpha
+        this.scene.tweens.add({
+            targets: sceneObjects.background,
+            alpha: this.originalBackgroundAlpha,
+            duration: 500,
+            ease: 'Power2'
+        });
+        
         // Clean up all game elements
         if (this.typingGameBackground) this.typingGameBackground.destroy();
         if (this.typingGameText) this.typingGameText.destroy();
         if (this.typingGameInput) this.typingGameInput.destroy();
-        if (this.typingGameCursor) this.typingGameCursor.destroy();
-        if (this.typingGameTimer) this.typingGameTimer.destroy();
         
-        // Store references to text elements we need to destroy
+        // Store references to elements we need to destroy
         const textElementsToDestroy: Phaser.GameObjects.Text[] = [];
+        const graphicsToDestroy: Phaser.GameObjects.GameObject[] = [];
         
-        // Find all text elements created for the game
+        // Find all elements created for the game
         this.scene.children.list.forEach(child => {
             if (child instanceof Phaser.GameObjects.Text) {
-                // Check for all game-related texts by their positions
-                if ([150, 200, 300, 350, 450, 500].includes(Math.round(child.y))) {
+                // Find all text elements with depth 11 or 12 (our typing game UI)
+                if (child.depth === 11 || child.depth === 12) {
                     textElementsToDestroy.push(child);
                 }
             }
-            
-            // Also look for any other rectangles created for the game
-            if (child instanceof Phaser.GameObjects.Rectangle && 
-                child !== this.typingGameBackground && 
-                child !== this.typingGameCursor) {
-                child.destroy();
+            if (child instanceof Phaser.GameObjects.Rectangle || child instanceof Phaser.GameObjects.Graphics) {
+                // Find all graphics elements with depth 11 or 12
+                if (child.depth === 11 || child.depth === 12) {
+                    graphicsToDestroy.push(child);
+                }
             }
         });
         
-        // Destroy all found text elements
+        // Destroy all found elements
         textElementsToDestroy.forEach(textElement => {
             textElement.destroy();
         });
         
-        // Stop timers
-        if (this.typingGameCursorTimer) this.typingGameCursorTimer.remove();
-        if (this.typingGameTimeEvent) this.typingGameTimeEvent.remove();
+        graphicsToDestroy.forEach(graphic => {
+            graphic.destroy();
+        });
         
         // Remove keyboard listener
         if (this.scene.input && this.scene.input.keyboard) {
@@ -312,11 +279,11 @@ export class TypingGame {
         
         // Handle the result
         if (success) {
-            this.dialog.showDialog("Finally done. One less thing to worry about.");
+            this.dialog.showDialog("Finally done. One less thing to worry about.", DialogType.PROTAGONIST);
             this.gameState.playerChoices['computer'] = 'completed';
             this.gameState.interactedObjects.add('computer');
         } else {
-            this.dialog.showDialog("I couldn't finish the report. I'll try again.");
+            this.dialog.showDialog("I couldn't finish the report. I'll try again.", DialogType.PROTAGONIST);
         }
         
         // Check if player is ready to leave
