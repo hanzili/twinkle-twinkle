@@ -2,24 +2,31 @@ import { BaseScene, EnergyLevel } from './BaseScene';
 
 export class Scene3_Bus extends BaseScene {
     private background: Phaser.GameObjects.Image;
-    private continueText: Phaser.GameObjects.Text;
+    private phoneRinging: Phaser.GameObjects.Image;
+    private ignoreButton: Phaser.GameObjects.Container;
+    private acceptButton: Phaser.GameObjects.Container;
+    private postponeButton: Phaser.GameObjects.Container;
 
     constructor() {
         super('Scene3_Bus');
     }
 
     preload() {
-        // Load any bus-specific assets
-        this.load.image('bus_bg', 'assets/skytrain_background.png'); // Placeholder, using skytrain bg for now
+        // Load scene-specific assets
+        this.load.image('on_bus_bg', 'assets/scene3/on-bus-background.png');
+        this.load.image('phone_ringing_bg', 'assets/scene3/phone-ringing-background.png');
+        this.load.image('button', 'assets/scene3/button.png');
     }
 
     create() {
         // Call parent create method to set up defaults including font override
         super.create();
         
-        // Add placeholder background
-        const placeholderColor = 0x333333; // Slightly different color from previous scene
-        this.background = this.add.rectangle(512, 384, 1024, 768, placeholderColor) as any;
+        // Setup dimensions
+        const gameWidth = this.cameras.main.width;
+        const gameHeight = this.cameras.main.height;
+        const centerX = gameWidth / 2;
+        const centerY = gameHeight / 2;
         
         // Initialize custom cursor
         this.initCursor();
@@ -27,52 +34,62 @@ export class Scene3_Bus extends BaseScene {
         // Display energy level (HIGH in this scene)
         this.showEnergyLevel(EnergyLevel.HIGH);
         
-        // Add scene title
-        this.add.text(512, 300, 'On the Bus', { 
-            fontSize: '36px', 
-            color: '#ffffff' 
+        // Step 1: Show on-bus background first
+        this.background = this.add.image(centerX, centerY, 'on_bus_bg')
+            .setDisplaySize(gameWidth, gameHeight)
+            .setDepth(0);
+        
+        // Wait for 2 seconds before showing the phone ringing
+        this.time.delayedCall(2000, () => {
+            // Step 2: Show phone ringing background
+            this.background.setVisible(false);
+            this.phoneRinging = this.add.image(centerX, centerY, 'phone_ringing_bg')
+                .setDisplaySize(gameWidth, gameHeight)
+                .setDepth(0);
+            
+            // Wait for 2 seconds before showing the choices
+            this.time.delayedCall(2000, () => {
+                // Add choice buttons directly on the phone ringing background
+                this.createChoiceButtons();
+            }, [], this);
+        }, [], this);
+    }
+    
+    private createChoiceButtons(): void {
+        // Get the right side position (about 80% of screen width)
+        const rightSideX = this.cameras.main.width * 0.85;
+        
+        // Position buttons in a vertical column on the right side of the screen
+        this.createButton(rightSideX, this.cameras.main.height * 0.55, 'Ignore the call', 'ignore');
+        this.createButton(rightSideX, this.cameras.main.height * 0.65, 'Answer and accept the task', 'accept');
+        this.createButton(rightSideX, this.cameras.main.height * 0.75, 'Answer and ask to finish the rest tomorrow', 'postpone');
+    }
+    
+    private createButton(x: number, y: number, text: string, choice: string): Phaser.GameObjects.Container {
+        // Create button image and scale it down
+        const buttonImg = this.add.image(0, 0, 'button').setScale(0.10);
+        
+        // Create text with smaller font size to fit the scaled button
+        const buttonText = this.add.text(0, 0, text, {
+            fontSize: '16px',
+            color: '#000000',
+            align: 'center',
+            wordWrap: { width: buttonImg.displayWidth - 20 }
         }).setOrigin(0.5);
         
-        // Add scene description
-        this.add.text(512, 400, 'Time on the phone, protagonist almost falls asleep.\nA phone call comes in and wakes the protagonist up.', { 
-            fontSize: '22px', 
-            color: '#aaaaaa',
-            align: 'center'
-        }).setOrigin(0.5);
+        // Create container with button image and text
+        const container = this.add.container(x, y, [buttonImg, buttonText]);
         
-        // Player choices
-        this.add.text(512, 480, 'What do you want to do?', { 
-            fontSize: '26px', 
-            color: '#ffffff',
-            align: 'center'
-        }).setOrigin(0.5);
+        // Set size based on the scaled button image for interaction
+        container.setSize(buttonImg.displayWidth, buttonImg.displayHeight);
         
-        // Choice buttons
-        const blockButton = this.add.text(512, 540, 'Block the call', { 
-            fontSize: '20px', 
-            color: '#ffff00',
-            backgroundColor: '#550000',
-            padding: { x: 20, y: 10 }
-        }).setOrigin(0.5)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerover', () => blockButton.setBackgroundColor('#770000'))
-        .on('pointerout', () => blockButton.setBackgroundColor('#550000'))
-        .on('pointerdown', () => {
-            this.proceedToEnding('block');
-        });
+        // Make interactive
+        container.setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => {
+                this.proceedToEnding(choice);
+            });
         
-        const answerButton = this.add.text(512, 600, 'Answer the call', { 
-            fontSize: '20px', 
-            color: '#ffff00',
-            backgroundColor: '#550000',
-            padding: { x: 20, y: 10 }
-        }).setOrigin(0.5)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerover', () => answerButton.setBackgroundColor('#770000'))
-        .on('pointerout', () => answerButton.setBackgroundColor('#550000'))
-        .on('pointerdown', () => {
-            this.proceedToEnding('answer');
-        });
+        return container;
     }
     
     private proceedToEnding(choice: string): void {
