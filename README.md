@@ -1,17 +1,18 @@
 # Twinkle Twinkle
 
-*A narrative puzzle game about a late night at the office and the choices that define us*
+*A minimalist narrative puzzle game with a monochromatic aesthetic, exploring a late night at the office and the choices that define us*
 
 ## Game Overview
 
-"Twinkle Twinkle" is a narrative-driven game that follows a protagonist's journey as they prepare to leave work and navigate their commute home. Through various interactions and choices, players shape the protagonist's mindset and ultimate fate, leading to one of four possible endings.
+"Twinkle Twinkle" is a narrative-driven game with a striking black and white visual style that follows a protagonist's journey as they prepare to leave work and navigate their commute home. Through various interactions and choices, players shape the protagonist's mindset and ultimate fate, leading to one of four possible endings.
 
 The game explores themes of work-life balance, personal identity, and the small decisions that collectively define our lives. As the protagonist progresses from office to home, their energy level gradually increases, symbolizing the recharged spirit away from work.
 
 ## Features
 
+- **Minimalist Black and White Aesthetic**: Clean, high-contrast visuals focusing on essential elements
 - **Interactive Office Environment**: Interact with various objects in the office that reveal insights about the protagonist's life
-- **Typing Mini-Game**: Complete a work report through a typing challenge to progress in the game
+- **Simplified Typing Mini-Game**: Complete a work report through a streamlined typing challenge
 - **Meaningful Choices**: Every interaction shapes the character's mindset and influences the final outcome
 - **Multiple Endings**: Four distinct endings based on your choices throughout the game
 - **Energy Level System**: Visual representation of the protagonist's energy level as they progress through the game
@@ -172,7 +173,7 @@ The office scene uses a modular architecture for better code organization:
 
 - **DialogSystem.ts**: Dialog management that:
   - Creates and displays dialog boxes with text
-  - Handles dialog choice buttons
+  - Handles dialog choice button
   - Manages the dialog flow and callbacks
   - Ensures only one dialog is visible at a time
 
@@ -183,9 +184,9 @@ The office scene uses a modular architecture for better code organization:
   - Updates game state based on player choices
 
 - **TypingGame.ts**: Mini-game implementation that:
-  - Creates a typing challenge interface
+  - Creates a minimalist black and white typing interface
   - Handles keyboard input during the mini-game
-  - Calculates typing accuracy and determines success
+  - Uses a simple match completion system
   - Updates game state based on mini-game outcome
 
 ### Logic Flow
@@ -227,19 +228,30 @@ The office scene uses a modular architecture for better code organization:
 - Custom cursor images (cursor.png, cursor_focus.png)
 - Energy level indicators (energy-empty.png, energy-low.png, energy-medium.png, energy-high.png)
 - Sprite sheets for animations (fish_animation.png)
-- Background images (office_background.png, skytrain_background.png)
+- Background images (office_background.png, skytrain_background.png, typing-background.png)
 - Object sprites (computer.png, iced_coffee.png, etc.)
 - Audio files (click.mp3, typing.mp3, ambient_office.mp3)
 
 This architecture follows a component-based design that separates concerns while allowing necessary communication between parts of the system. The modular approach makes it easier to maintain and extend the game with new features or scenes.
 
+## Visual Design
+
+The game features a distinctive minimalist black and white aesthetic:
+
+- **Monochromatic UI**: All interface elements use a strict black and white color scheme
+- **High Contrast**: Clear visual hierarchy with strong contrast between elements
+- **Simplified Visuals**: Focus on essential information without color distractions
+- **Typography Focus**: Emphasis on clear typography for narrative immersion
+
+This stark visual approach complements the game's themes of work-life balance and binary choices, while creating a unique atmospheric experience.
+
 ## Credits
 
 - **Game Design & Development**: [Your Name/Team]
-- **Artwork**: Original pixel art and assets
+- **Artwork**: Original pixel art and monochromatic assets
 - **Sound Effects**: Creative Commons licensed audio
 - **Special Thanks**: To everyone who tested the game and provided feedback
 
 ---
 
-*Office Escape is a story about finding your own path in life, one click at a time.*
+*Twinkle Twinkle is a story about finding your own path in life, one click at a time.*

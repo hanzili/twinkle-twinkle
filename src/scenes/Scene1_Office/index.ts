@@ -75,6 +75,9 @@ export class Scene1_Office extends BaseScene {
         } catch (e) {
             console.log('Ambient audio playback failed, continuing without sound');
         }
+        
+        // Add development shortcut button to go directly to Scene2_Skytrain
+        // this.createDevelopmentButton();
     }
     
     private setupNarration() {
@@ -122,7 +125,7 @@ export class Scene1_Office extends BaseScene {
         this.fishTankZone.on('pointerdown', () => this.interactions.handleFishTankInteraction());
         
         // Visualize the zones during development (comment out for production)
-        this.visualizeZones([this.computerZone, this.coffeeZone, this.plantZone, this.fishTankZone]);
+        // this.visualizeZones([this.computerZone, this.coffeeZone, this.plantZone, this.fishTankZone]);
     }
     
     // Helper method to visualize interaction zones during development
@@ -143,22 +146,20 @@ export class Scene1_Office extends BaseScene {
         // Save player choices for use in later scenes
         localStorage.setItem('playerChoices', JSON.stringify(this.gameState.playerChoices));
         
-        // Transition animation - dimming lights
-        this.tweens.add({
-            targets: this.background,
-            alpha: 0.2,
-            duration: 2000,
-            ease: 'Power2'
-        });
+        // Create a black overlay for fade effect
+        const fadeOverlay = this.add.rectangle(
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2,
+            this.cameras.main.width,
+            this.cameras.main.height,
+            0x000000
+        ).setAlpha(0).setDepth(1000);
         
-        // Elevator door closing animation - adjusted for 1920x1080
-        const leftDoor = this.add.rectangle(860, 540, 400, 1080, 0x333333).setAlpha(0);
-        const rightDoor = this.add.rectangle(1060, 540, 400, 1080, 0x333333).setAlpha(0);
-        
+        // Simple fade to black transition
         this.tweens.add({
-            targets: [leftDoor, rightDoor],
+            targets: fadeOverlay,
             alpha: 1,
-            duration: 1000,
+            duration: 1500,
             ease: 'Power2',
             onComplete: () => {
                 // Increase energy level to MEDIUM for the next scene
@@ -167,20 +168,36 @@ export class Scene1_Office extends BaseScene {
                 this.transitionToScene('Scene2_Skytrain');
             }
         });
-        
-        this.tweens.add({
-            targets: leftDoor,
-            x: 960 - 200,
-            duration: 2000,
-            ease: 'Power2'
+    }
+    
+    // Add a development button for quick scene navigation during testing
+    private createDevelopmentButton(): void {
+        const button = this.add.rectangle(
+            100, // Position in top-left area
+            60,
+            180, 
+            40,
+            0x333333
+        )
+        .setDepth(1000) // Very high depth to appear above everything
+        .setAlpha(0.8)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerover', () => button.setFillStyle(0x555555))
+        .on('pointerout', () => button.setFillStyle(0x333333))
+        .on('pointerdown', () => {
+            console.log('Development shortcut: Going directly to Scene2_Skytrain');
+            this.leaveOffice();
         });
         
-        this.tweens.add({
-            targets: rightDoor,
-            x: 960 + 200,
-            duration: 2000,
-            ease: 'Power2'
-        });
+        // Add text label to the button
+        this.add.text(100, 60, "DEV: GO TO SCENE 2", {
+            fontFamily: 'Courier New',
+            fontSize: '14px',
+            color: '#ffffff',
+            fontStyle: 'bold'
+        })
+        .setOrigin(0.5)
+        .setDepth(1000);
     }
     
     // Getters for components to access

@@ -36,13 +36,13 @@ export class GameState {
                     const leaveButton = this.scene.add.text(512, 200, 'Ready to leave the office?', { 
                         fontSize: '28px', 
                         color: '#ffffff',
-                        backgroundColor: '#550000',
+                        backgroundColor: '#000000',
                         padding: { x: 20, y: 10 }
                     })
                     .setOrigin(0.5)
                     .setInteractive({ useHandCursor: true })
-                    .on('pointerover', () => leaveButton.setBackgroundColor('#770000'))
-                    .on('pointerout', () => leaveButton.setBackgroundColor('#550000'))
+                    .on('pointerover', () => leaveButton.setBackgroundColor('#333333'))
+                    .on('pointerout', () => leaveButton.setBackgroundColor('#000000'))
                     .on('pointerdown', () => {
                         this.scene.leaveOffice();
                     });

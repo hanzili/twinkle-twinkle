@@ -67,15 +67,15 @@ export class DialogSystem {
                 const yPos = choiceStartY + (index * 40); // Position choices from top down
                 const button = this.scene.add.text(centerX, yPos, choice, { 
                     fontSize: '20px', 
-                    color: '#ffff00',
-                    backgroundColor: '#333333',
+                    color: '#ffffff',
+                    backgroundColor: '#000000',
                     padding: { x: 10, y: 5 }
                 })
                 .setOrigin(0.5)
                 .setDepth(101) // Same depth as dialog text
                 .setInteractive({ useHandCursor: true })
-                .on('pointerover', () => button.setColor('#ff0000'))
-                .on('pointerout', () => button.setColor('#ffff00'))
+                .on('pointerover', () => button.setColor('#aaaaaa'))
+                .on('pointerout', () => button.setColor('#ffffff'))
                 .on('pointerdown', () => {
                     // Handle the choice via callback
                     if (callback) {
@@ -110,7 +110,7 @@ export class DialogSystem {
     // Debug helper to visualize bounds of dialog box
     private visualizeDialogBounds(dialogBox: Phaser.GameObjects.Image): void {
         const graphics = this.scene.add.graphics();
-        graphics.lineStyle(2, 0x00ff00);
+        graphics.lineStyle(2, 0xffffff);
         graphics.strokeRect(
             dialogBox.x - dialogBox.displayWidth / 2,
             dialogBox.y - dialogBox.displayHeight / 2,

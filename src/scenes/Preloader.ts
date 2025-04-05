@@ -71,6 +71,17 @@ export class Preloader extends BaseScene
         this.load.image('energy-medium', 'energy-bar/energy-medium.png');
         this.load.image('energy-high', 'energy-bar/energy-high.png');
     
+        // Skytrain scene background animation frames
+        this.load.image('background-1', 'scene2/background-1.png');
+        this.load.image('background-2', 'scene2/background-2.png');
+        this.load.image('background-3', 'scene2/background-3.png');
+        this.load.image('background-4', 'scene2/background-4.png');
+        this.load.image('background-5', 'scene2/background-5.png');
+        
+        // Skytrain scene thought bubbles
+        this.load.image('thought-bubble-1', 'scene2/thought-bubble-1.png');
+        this.load.image('thought-bubble-2', 'scene2/thought-bubble-2.png');
+        this.load.image('thought-bubble-3', 'scene2/thought-bubble-3.png');
         
         // Sound effects
         this.load.audio('click', 'click.mp3');
