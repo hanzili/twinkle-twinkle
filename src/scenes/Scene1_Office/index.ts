@@ -1,8 +1,8 @@
 import { BaseScene, EnergyLevel } from '../BaseScene';
 import { InteractionHandlers } from './InteractionHandlers';
-import { TypingGame } from './TypingGame';
-import { DialogSystem, DialogType } from './DialogSystem';
-import { GameState } from './GameState';
+import { TypingGame } from '../../minigames/TypingGame';
+import { DialogManager, DialogType } from '../../utils/DialogManager';
+import { GameStateManager } from '../../utils/GameStateManager';
 
 export class Scene1_Office extends BaseScene {
     // Camera and background
@@ -15,26 +15,50 @@ export class Scene1_Office extends BaseScene {
     private plantZone: Phaser.GameObjects.Zone;
     private fishTankZone: Phaser.GameObjects.Zone;
     
-    // Narration elements
+    // Narration elements (kept for backward compatibility with getSceneObjects)
     private narrationBox: Phaser.GameObjects.Image;
     private protagonist: Phaser.GameObjects.Image;
     
     // Components
     private interactions: InteractionHandlers;
     private typingGame: TypingGame;
-    private dialog: DialogSystem;
-    private gameState: GameState;
+    // Replace with centralized managers - make these public so they can be accessed
+    public dialogManager: DialogManager;
+    public gameStateManager: GameStateManager;
     
     // Scene state
     private initialDialogShown: boolean = false;
     
     constructor() {
         super('Scene1_Office');
+        
+        // Initialize managers
+        this.dialogManager = DialogManager.getInstance();
+        this.gameStateManager = GameStateManager.getInstance();
     }
     
     preload() {
         // Scene1_Office specific assets can be loaded here if needed
         // Most assets are already loaded in the Preloader
+        
+        // Ensure the dialog assets are loaded
+        if (!this.textures.exists('narration')) {
+            this.load.image('narration', 'assets/dialog/narration.png');
+        }
+        
+        if (!this.textures.exists('protagonist')) {
+            this.load.image('protagonist', 'assets/dialog/protagonist.png');
+        }
+        
+        // Ensure the typing game background is loaded
+        if (!this.textures.exists('typing-background')) {
+            this.load.image('typing-background', 'assets/backgrounds/typing-bg.png');
+        }
+        
+        // Ensure the typing sound is loaded
+        if (!this.sound.get('type')) {
+            this.load.audio('type', 'assets/sounds/type.mp3');
+        }
     }
     
     create() {
@@ -52,16 +76,21 @@ export class Scene1_Office extends BaseScene {
         this.background = this.add.image(gameWidth/2, gameHeight/2, 'office_background');
         this.background.setDisplaySize(gameWidth, gameHeight);
         
-        // Initialize game state
-        this.gameState = new GameState(this);
+        // Reset interactions for Scene1 to ensure objects can be interacted with
+        this.gameStateManager.resetForScene1();
         
-        // Initialize narration components
+        // Initialize dialog manager with this scene
+        this.dialogManager.init(this);
+        
+        // Set up placeholder narration elements for backward compatibility
         this.setupNarration();
         
-        // Initialize components
-        this.dialog = new DialogSystem(this);
-        this.interactions = new InteractionHandlers(this, this.dialog, this.gameState);
-        this.typingGame = new TypingGame(this, this.dialog, this.gameState);
+        // Initialize components with new managers
+        this.interactions = new InteractionHandlers(this, this.dialogManager, this.gameStateManager);
+        this.typingGame = new TypingGame(this, this.dialogManager, this.gameStateManager);
+        
+        // Set the typing game reference in the interaction handlers
+        this.interactions.setTypingGame(this.typingGame);
         
         // Initialize custom cursor using BaseScene method
         this.initCursor();
@@ -81,47 +110,49 @@ export class Scene1_Office extends BaseScene {
         
         // Show initial dialog
         this.showInitialDialog();
-        
-        // Add development shortcut button to go directly to Scene2_Skytrain
-        // this.createDevelopmentButton();
     }
     
-    private showInitialDialog(): void {
-        // First dialog - protagonist dialog
-        this.dialog.showDialog("Overtime again... It's already past 9 PM.", DialogType.PROTAGONIST, undefined, (choice) => {
-            // Show second dialog immediately after first is dismissed
-            setTimeout(() => {
-                this.dialog.showDialog(
-                    "This is so hard. There's still so much I'm not good at... How long will it take for me to finally get used to this job?", 
-                    DialogType.PROTAGONIST
-                );
-                this.initialDialogShown = true;
-            }, 100); // Small delay to ensure first dialog is fully dismissed
-        });
+    private async showInitialDialog(): Promise<void> {
+        // First dialog - protagonist dialog, now using promise-based approach
+        await this.dialogManager.showDialog(
+            "Overtime again... It's already past 9 PM.", 
+            DialogType.PROTAGONIST
+        );
+        
+        // Second dialog - no need for setTimeout or callbacks
+        await this.dialogManager.showDialog(
+            "This is so hard. There's still so much I'm not good at... How long will it take for me to finally get used to this job?",
+            DialogType.PROTAGONIST
+        );
+        
+        // Add a hint for the player
+        await this.dialogManager.showDialog(
+            "I should check my email and feed my fish before I leave for the day.",
+            DialogType.PROTAGONIST
+        );
+        
+        this.initialDialogShown = true;
     }
     
     private setupNarration() {
-        // Get scene dimensions for center positioning
+        // This method now just initializes placeholder objects for backward compatibility
+        // The actual dialog rendering is handled by DialogManager
         const gameWidth = this.cameras.main.width;
         const gameHeight = this.cameras.main.height;
         const centerX = gameWidth / 2;
-        
-        // Position dialog boxes at the bottom third of the screen rather than center
-        // This keeps them from obscuring the main gameplay area
         const dialogY = gameHeight - 450;
-
-        console.log(centerX, dialogY);
         
         // Add narration box and protagonist image (initially hidden)
+        // These are kept for backward compatibility with getSceneObjects
         this.narrationBox = this.add.image(centerX, dialogY, 'narration')
             .setVisible(false)
             .setScale(0.5)
-            .setDepth(100); // Ensure dialog appears above other elements
+            .setDepth(100);
             
         this.protagonist = this.add.image(centerX, dialogY, 'protagonist')
             .setVisible(false)
             .setScale(0.5)
-            .setDepth(100); // Ensure dialog appears above other elements
+            .setDepth(100);
     }
     
     private createInteractiveObjects() {
@@ -130,19 +161,27 @@ export class Scene1_Office extends BaseScene {
         
         // Central computer/monitor zone
         this.computerZone = this.add.zone(800, 320, 300, 250).setInteractive({ useHandCursor: true });
-        this.computerZone.on('pointerdown', () => this.interactions.handleComputerInteraction());
+        this.computerZone.on('pointerdown', () => {
+            this.interactions.handleComputerInteraction();
+        });
         
         // Coffee cup zone
         this.coffeeZone = this.add.zone(660, 700, 100, 100).setInteractive({ useHandCursor: true });
-        this.coffeeZone.on('pointerdown', () => this.interactions.handleCoffeeInteraction());
+        this.coffeeZone.on('pointerdown', () => {
+            this.interactions.handleCoffeeInteraction();
+        });
         
         // Plant zone
         this.plantZone = this.add.zone(350, 500, 150, 200).setInteractive({ useHandCursor: true });
-        this.plantZone.on('pointerdown', () => this.interactions.handlePlantInteraction());
+        this.plantZone.on('pointerdown', () => {
+            this.interactions.handlePlantInteraction();
+        });
         
         // Fish tank zone
         this.fishTankZone = this.add.zone(1700, 600, 150, 200).setInteractive({ useHandCursor: true });
-        this.fishTankZone.on('pointerdown', () => this.interactions.handleFishTankInteraction());
+        this.fishTankZone.on('pointerdown', () => {
+            this.interactions.handleFishTankInteraction();
+        });
         
         // Visualize the zones during development (comment out for production)
         // this.visualizeZones([this.computerZone, this.coffeeZone, this.plantZone, this.fishTankZone]);
@@ -163,8 +202,7 @@ export class Scene1_Office extends BaseScene {
     }
     
     public leaveOffice() {
-        // Save player choices for use in later scenes
-        localStorage.setItem('playerChoices', JSON.stringify(this.gameState.playerChoices));
+        // No need to save player choices directly - GameStateManager handles that
         
         // Create a black overlay for fade effect
         const fadeOverlay = this.add.rectangle(
@@ -184,6 +222,8 @@ export class Scene1_Office extends BaseScene {
             onComplete: () => {
                 // Increase energy level to MEDIUM for the next scene
                 localStorage.setItem('playerEnergyLevel', EnergyLevel.MEDIUM);
+                // Clean up dialog manager before transition
+                this.dialogManager.cleanup();
                 // Use the BaseScene's transitionToScene method
                 this.transitionToScene('Scene2_Skytrain');
             }
@@ -205,7 +245,6 @@ export class Scene1_Office extends BaseScene {
         .on('pointerover', () => button.setFillStyle(0x555555))
         .on('pointerout', () => button.setFillStyle(0x333333))
         .on('pointerdown', () => {
-            console.log('Development shortcut: Going directly to Scene2_Skytrain');
             this.leaveOffice();
         });
         
@@ -232,5 +271,12 @@ export class Scene1_Office extends BaseScene {
             camera: this.camera,
             background: this.background
         };
+    }
+    
+    // Clean up when leaving the scene
+    shutdown(): void {
+        // Clean up dialog manager before leaving the scene
+        this.dialogManager.cleanup();
+        super.shutdown();
     }
 } 
