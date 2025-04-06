@@ -1,14 +1,10 @@
 import { BaseScene } from './BaseScene';
 import { GameStateManager, Ending } from '../utils/GameStateManager';
-
-// Dialog type enum similar to other scenes
-enum DialogType {
-    NARRATION,
-    PROTAGONIST
-}
+import { DialogManager, DialogType } from '../utils/DialogManager';
 
 export class Scene4_Ending extends BaseScene {
-    private gameState: GameStateManager;
+    private gameStateManager: GameStateManager;
+    private dialogManager: DialogManager;
     private background: Phaser.GameObjects.Image;
     private restartButton: Phaser.GameObjects.Container;
     
@@ -19,7 +15,8 @@ export class Scene4_Ending extends BaseScene {
 
     constructor() {
         super('Scene4_Ending');
-        this.gameState = GameStateManager.getInstance();
+        this.gameStateManager = GameStateManager.getInstance();
+        this.dialogManager = DialogManager.getInstance();
     }
 
     preload() {
@@ -49,8 +46,11 @@ export class Scene4_Ending extends BaseScene {
         const centerX = gameWidth / 2;
         const centerY = gameHeight / 2;
         
+        // Initialize dialog manager with this scene
+        this.dialogManager.init(this);
+        
         // Determine the ending based on player choices
-        const ending = this.gameState.determineEnding();
+        const ending = this.gameStateManager.determineEnding();
         
         // Add background based on ending type
         this.background = this.add.image(centerX, centerY, this.getEndingBackground(ending))
@@ -65,8 +65,6 @@ export class Scene4_Ending extends BaseScene {
         
         // Show ending dialog
         this.showEndingDialog(ending);
-        
-        // The restart button will be created after the dialog is dismissed
     }
     
     private setupDialog() {
@@ -102,52 +100,20 @@ export class Scene4_Ending extends BaseScene {
         .setVisible(false);
     }
     
-    private showDialog(text: string, type: DialogType, callback?: () => void): void {
-        // First hide any existing dialog elements
-        this.hideDialog();
-        
-        // Show appropriate dialog based on type
-        if (type === DialogType.NARRATION) {
-            this.narrationBox.setVisible(true);
-        } else {
-            this.protagonist.setVisible(true);
-        }
-        
-        // Update and show text
-        this.dialogText.setText(text);
-        this.dialogText.setVisible(true);
-        
-        // Create a click handler to dismiss the dialog
-        this.input.once('pointerdown', () => {
-            this.hideDialog();
-            if (callback) {
-                callback();
-            }
-        });
-    }
-    
-    private hideDialog(): void {
-        // Hide dialog elements
-        this.narrationBox.setVisible(false);
-        this.protagonist.setVisible(false);
-        this.dialogText.setVisible(false);
-    }
-    
-    private showEndingDialog(ending: Ending): void {
+    private async showEndingDialog(ending: Ending): Promise<void> {
         // Combine the title and description into a single dialog
         const combinedText = `${this.getEndingTitle(ending)}\n\n${this.getEndingDescription(ending)}`;
         
-        // Show combined text in a single dialog, and show the restart button when dialog is dismissed
-        this.showDialog(
+        // Show combined text in a single dialog
+        await this.dialogManager.showDialog(
             combinedText,
-            DialogType.NARRATION,
-            () => {
-                // After dialog is dismissed, show the restart button
-                this.createRestartButton(
-                    this.cameras.main.width / 2, 
-                    this.cameras.main.height - 100
-                );
-            }
+            DialogType.NARRATION
+        );
+        
+        // After dialog is dismissed, show the restart button
+        this.createRestartButton(
+            this.cameras.main.width / 2, 
+            this.cameras.main.height - 100
         );
     }
     
@@ -216,10 +182,22 @@ export class Scene4_Ending extends BaseScene {
         this.restartButton.setInteractive({ useHandCursor: true })
             .on('pointerdown', () => {
                 // Reset game state
-                this.gameState.resetState();
+                this.gameStateManager.resetState();
+                
+                // Clean up dialog manager
+                this.dialogManager.cleanup();
                 
                 // Return to main menu
                 this.transitionToScene('MainMenu');
             });
+    }
+    
+    // Clean up when leaving the scene
+    shutdown(): void {
+        // Clean up dialog manager before leaving
+        this.dialogManager.cleanup();
+        
+        // Call parent shutdown
+        super.shutdown();
     }
 } 

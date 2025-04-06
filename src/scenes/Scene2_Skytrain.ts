@@ -1,4 +1,6 @@
 import { BaseScene, EnergyLevel } from './BaseScene';
+import { DialogManager, DialogType } from '../utils/DialogManager';
+import { GameStateManager } from '../utils/GameStateManager';
 
 // Define thought types for ending determination
 enum ThoughtType {
@@ -38,9 +40,17 @@ export class Scene2_Skytrain extends BaseScene {
         { text: "I wish I could just run away and start a bubble tea shop", type: ThoughtType.FREEDOM }
     ];
     private thoughtCountText!: Phaser.GameObjects.Text;
+    
+    // Add centralized managers
+    private dialogManager: DialogManager;
+    private gameStateManager: GameStateManager;
 
     constructor() {
         super('Scene2_Skytrain');
+        
+        // Initialize managers
+        this.dialogManager = DialogManager.getInstance();
+        this.gameStateManager = GameStateManager.getInstance();
     }
 
     create() {
@@ -52,6 +62,9 @@ export class Scene2_Skytrain extends BaseScene {
         const gameHeight = this.cameras.main.height;
         const centerX = gameWidth / 2;
         const centerY = gameHeight / 2;
+        
+        // Initialize the dialog manager with this scene
+        this.dialogManager.init(this);
         
         // Adjust the bubble height boundaries based on game height
         this.minBubbleY = gameHeight * 0.20;
@@ -83,6 +96,13 @@ export class Scene2_Skytrain extends BaseScene {
         
         // Display energy level (MEDIUM in this scene)
         this.showEnergyLevel(EnergyLevel.MEDIUM);
+        
+        // Play background music
+        try {
+            this.sound.play('bgm2', { loop: true, volume: 0.5 });
+        } catch (e) {
+            console.log('Background music playback failed, continuing without music');
+        }
         
         // Show counter for thought selection
         this.createThoughtCounter();
@@ -228,6 +248,9 @@ export class Scene2_Skytrain extends BaseScene {
         this.thoughtsSelected[type]++;
         this.thoughtCount++;
         
+        // Store the choice in GameStateManager
+        this.gameStateManager.setFlag(`thought_${type}`, this.thoughtsSelected[type]);
+        
         // Update counter
         const counter = this.children.getByName('thoughtCounter') as Phaser.GameObjects.Text;
         if (counter) {
@@ -248,44 +271,67 @@ export class Scene2_Skytrain extends BaseScene {
             return;
         }
         
-        // Save selected thought types for ending determination
-        localStorage.setItem('thoughtChoices', JSON.stringify(this.thoughtsSelected));
+        // Stop timers
+        this.backgroundTimer.destroy();
+        this.thoughtTimer.destroy();
         
-        // Increase energy level for the next scene
-        localStorage.setItem('playerEnergyLevel', EnergyLevel.HIGH);
-        
-        // Create fade overlay
-        const fadeOverlay = this.add.rectangle(
+        // Create a fade out effect
+        const fadeRect = this.add.rectangle(
             this.cameras.main.width / 2,
             this.cameras.main.height / 2,
             this.cameras.main.width,
             this.cameras.main.height,
             0x000000
-        ).setAlpha(0).setDepth(1000);
+        ).setAlpha(0).setDepth(100);
         
-        // Fade out
+        // Animate fade out
         this.tweens.add({
-            targets: fadeOverlay,
+            targets: fadeRect,
             alpha: 1,
             duration: 1500,
             ease: 'Power2',
             onComplete: () => {
-                // Go to the Bus scene
+                // Update the game state
+                this.recordFinalThoughtScores();
+                
+                // Clean up dialog manager before transition
+                this.dialogManager.cleanup();
+                
+                // Go to next scene
                 this.transitionToScene('Scene3_Bus');
             }
         });
     }
     
+    // Record final thought scores to determine the ending
+    private recordFinalThoughtScores(): void {
+        // Determine the dominant thought type
+        let dominantType = ThoughtType.SAFE; // Default
+        let highestScore = this.thoughtsSelected[ThoughtType.SAFE];
+        
+        if (this.thoughtsSelected[ThoughtType.OVERACHIEVER] > highestScore) {
+            dominantType = ThoughtType.OVERACHIEVER;
+            highestScore = this.thoughtsSelected[ThoughtType.OVERACHIEVER];
+        }
+        
+        if (this.thoughtsSelected[ThoughtType.FREEDOM] > highestScore) {
+            dominantType = ThoughtType.FREEDOM;
+        }
+        
+        // Record the dominant thought type
+        this.gameStateManager.setFlag('dominant_thought', dominantType);
+    }
+    
     // Clean up when leaving the scene
     shutdown(): void {
-        if (this.backgroundTimer) {
-            this.backgroundTimer.destroy();
-        }
+        // Stop timers to prevent memory leaks
+        if (this.backgroundTimer) this.backgroundTimer.destroy();
+        if (this.thoughtTimer) this.thoughtTimer.destroy();
         
-        if (this.thoughtTimer) {
-            this.thoughtTimer.destroy();
-        }
+        // Clean up dialog manager before leaving the scene
+        this.dialogManager.cleanup();
         
+        // Call parent shutdown
         super.shutdown();
     }
 } 

@@ -26,9 +26,6 @@ export class Scene1_Office extends BaseScene {
     public dialogManager: DialogManager;
     public gameStateManager: GameStateManager;
     
-    // Scene state
-    private initialDialogShown: boolean = false;
-    
     constructor() {
         super('Scene1_Office');
         
@@ -37,29 +34,6 @@ export class Scene1_Office extends BaseScene {
         this.gameStateManager = GameStateManager.getInstance();
     }
     
-    preload() {
-        // Scene1_Office specific assets can be loaded here if needed
-        // Most assets are already loaded in the Preloader
-        
-        // Ensure the dialog assets are loaded
-        if (!this.textures.exists('narration')) {
-            this.load.image('narration', 'assets/dialog/narration.png');
-        }
-        
-        if (!this.textures.exists('protagonist')) {
-            this.load.image('protagonist', 'assets/dialog/protagonist.png');
-        }
-        
-        // Ensure the typing game background is loaded
-        if (!this.textures.exists('typing-background')) {
-            this.load.image('typing-background', 'assets/backgrounds/typing-bg.png');
-        }
-        
-        // Ensure the typing sound is loaded
-        if (!this.sound.get('type')) {
-            this.load.audio('type', 'assets/sounds/type.mp3');
-        }
-    }
     
     create() {
         // Call parent create method to set up defaults including font override
@@ -101,11 +75,12 @@ export class Scene1_Office extends BaseScene {
         // Create interactive objects with their actual sprites
         this.createInteractiveObjects();
         
-        // Setup ambient office sounds - wrapped in try/catch
+        // Setup ambient office sounds and background music - wrapped in try/catch
         try {
+            this.sound.play('bgm1', { loop: true, volume: 0.2 });
             this.sound.play('ambient_office', { loop: true, volume: 0.3 });
         } catch (e) {
-            console.log('Ambient audio playback failed, continuing without sound');
+            console.log('Audio playback failed, continuing without sound');
         }
         
         // Show initial dialog
@@ -130,8 +105,6 @@ export class Scene1_Office extends BaseScene {
             "I should check my email and feed my fish before I leave for the day.",
             DialogType.PROTAGONIST
         );
-        
-        this.initialDialogShown = true;
     }
     
     private setupNarration() {
@@ -181,23 +154,6 @@ export class Scene1_Office extends BaseScene {
         this.fishTankZone = this.add.zone(1700, 600, 150, 200).setInteractive({ useHandCursor: true });
         this.fishTankZone.on('pointerdown', () => {
             this.interactions.handleFishTankInteraction();
-        });
-        
-        // Visualize the zones during development (comment out for production)
-        // this.visualizeZones([this.computerZone, this.coffeeZone, this.plantZone, this.fishTankZone]);
-    }
-    
-    // Helper method to visualize interaction zones during development
-    private visualizeZones(zones: Phaser.GameObjects.Zone[]) {
-        zones.forEach(zone => {
-            const graphics = this.add.graphics();
-            graphics.lineStyle(2, 0xff0000);
-            graphics.strokeRect(
-                zone.x - zone.width / 2, 
-                zone.y - zone.height / 2, 
-                zone.width, 
-                zone.height
-            );
         });
     }
     

@@ -1,4 +1,3 @@
-import { Scene } from 'phaser';
 import { BaseScene } from './BaseScene';
 
 export class Preloader extends BaseScene
@@ -6,26 +5,6 @@ export class Preloader extends BaseScene
     constructor ()
     {
         super('Preloader');
-    }
-
-    init ()
-    {
-        //  We loaded this image in our Boot Scene, so we can display it here
-        this.add.image(512, 384, 'background');
-
-        //  A simple progress bar. This is the outline of the bar.
-        this.add.rectangle(512, 384, 468, 32).setStrokeStyle(1, 0xffffff);
-
-        //  This is the progress bar itself. It will increase in size from the left based on the % of progress.
-        const bar = this.add.rectangle(512-230, 384, 4, 28, 0xffffff);
-
-        //  Use the 'progress' event emitted by the LoaderPlugin to update the loading bar
-        this.load.on('progress', (progress: number) => {
-
-            //  Update the progress bar (our bar is 464px wide, so 100% = 464px)
-            bar.width = 4 + (460 * progress);
-
-        });
     }
 
     preload ()
@@ -84,9 +63,20 @@ export class Preloader extends BaseScene
         this.load.image('thought-bubble-3', 'scene2/thought-bubble-3.png');
         
         // Sound effects
-        this.load.audio('click', 'click.mp3');
-        this.load.audio('type', 'typing.mp3');
-        this.load.audio('ambient_office', 'ambient_office.mp3');
+        this.load.audio('mouse-clicking', 'sound/mouse_click.mp3');
+        this.load.audio('type', 'sound/typing.mp3');
+        this.load.audio('ambient_office', 'sound/chating.mp3');  // Using 'chating.mp3' as office ambiance
+        
+        // Additional sound effects
+        this.load.audio('button-selection', 'sound/button_selection.mp3');
+        this.load.audio('door', 'sound/door.mp3');
+        this.load.audio('walking', 'sound/walking.mp3');
+        this.load.audio('text-message', 'sound/iphone_text_message.mp3');
+        this.load.audio('notification', 'sound/iphone_notification.mp3');
+        
+        // Background music
+        this.load.audio('bgm1', 'sound/bgm1.mp3');
+        this.load.audio('bgm2', 'sound/bgm2.mp3');
     }
 
     create ()

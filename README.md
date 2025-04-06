@@ -95,11 +95,19 @@ This game is built with:
 ### Project Structure
 
 ```
-office-escape-game/
+twinkle-twinkle/
 ├── public/            # Static assets folder
 │   ├── assets/        # Game assets (images, audio)
 │   │   ├── cursor/    # Custom cursor images
-│   │   └── energy-bar/ # Energy level indicators
+│   │   ├── dialog/    # Dialog-related assets
+│   │   ├── energy-bar/ # Energy level indicators
+│   │   ├── fonts/     # Game fonts
+│   │   ├── scene1/    # Office scene assets
+│   │   ├── scene2/    # Skytrain scene assets
+│   │   ├── scene3/    # Bus scene assets
+│   │   ├── ending/    # Ending scenes assets
+│   │   ├── sound/     # Game audio files
+│   │   └── start-game/ # Main menu assets
 │   └── style.css      # Global styles
 ├── src/               # Source code
 │   ├── main.ts        # Entry point that initializes the game
@@ -110,19 +118,22 @@ office-escape-game/
 │   │   ├── MainMenu.ts        # Main menu screen
 │   │   ├── Scene1_Office/     # Main office scene (modular structure)
 │   │   │   ├── index.ts               # Main scene class
-│   │   │   ├── GameState.ts           # Tracks game state and player choices
-│   │   │   ├── DialogSystem.ts        # Handles dialog display and choices
-│   │   │   ├── InteractionHandlers.ts # Manages object interactions
-│   │   │   └── TypingGame.ts          # Typing mini-game implementation
+│   │   │   └── InteractionHandlers.ts # Manages object interactions
 │   │   ├── Scene2_Skytrain.ts  # Second game scene (skytrain)
 │   │   ├── Scene3_Bus.ts       # Third game scene (bus ride)
 │   │   ├── Scene4_Ending.ts    # Final scene with multiple endings
 │   │   ├── Game.ts             # Additional game logic
 │   │   └── GameOver.ts         # End screen
-│   └── utils/             # Utility classes
-│       └── CursorManager.ts    # Custom cursor management
+│   ├── utils/             # Utility classes
+│   │   ├── CursorManager.ts    # Custom cursor management
+│   │   ├── DialogManager.ts    # Dialog system for all scenes
+│   │   └── GameStateManager.ts # Game state and choice tracking
+│   └── minigames/         # Minigame implementations 
+│       └── TypingGame.ts      # Typing minigame component
 ├── vite/              # Vite configuration
-└── index.html         # HTML entry point
+├── index.html         # HTML entry point
+├── tsconfig.json      # TypeScript configuration
+└── package.json       # Project dependencies
 ```
 
 ### Core Components
@@ -132,6 +143,7 @@ office-escape-game/
 - **BaseScene**: Provides common functionality for all game scenes:
   - Custom cursor management with consistent behavior
   - Energy level display and tracking
+  - Font and text style management
   - Scene transition handling
   - Standardized cleanup processes
 
@@ -139,7 +151,20 @@ office-escape-game/
   - Replaces the default browser cursor with pixel art
   - Switches between normal and interactive cursor states
   - Handles cursor scaling and positioning
-  - Ensures proper cleanup between scene transitions
+
+#### State Management
+
+- **GameStateManager**: Centralized singleton class for tracking game state:
+  - Records player choices and interactions
+  - Tracks scores for different ending paths
+  - Determines which ending to show based on accumulated choices
+  - Persists game state in localStorage
+  - Manages game flags and scene transitions
+
+- **DialogManager**: Handles dialog creation and management across all scenes:
+  - Creates and displays dialog boxes with text
+  - Manages dialog choice buttons
+  - Controls dialog flow and callbacks
 
 #### Scene Management
 
@@ -151,42 +176,18 @@ office-escape-game/
 #### Game Progression Scenes
 
 - **Scene1_Office**: The starting scene with the protagonist at work (low energy)
+  - Uses a modular architecture with separate files for main scene logic and interaction handlers
+  - Contains the typing mini-game integration
+
 - **Scene2_Skytrain**: Transit scene after leaving work (medium energy)
 - **Scene3_Bus**: Final transit scene before reaching home (high energy)
 - **Scene4_Ending**: Ending scene based on player choices (full energy)
 
-#### Office Scene Components
+#### Mini-Games
 
-The office scene uses a modular architecture for better code organization:
-
-- **Scene1_Office/index.ts**: Main scene class that:
-  - Sets up the office environment and visual elements
-  - Initializes all sub-components
-  - Manages transitions between scenes
-  - Provides access to scene objects via getter methods
-
-- **GameState.ts**: State management system that:
-  - Tracks which objects the player has interacted with
-  - Records player choices throughout the game
-  - Determines when the player is ready to leave the office
-  - Stores data that influences the game ending
-
-- **DialogSystem.ts**: Dialog management that:
-  - Creates and displays dialog boxes with text
-  - Handles dialog choice button
-  - Manages the dialog flow and callbacks
-  - Ensures only one dialog is visible at a time
-
-- **InteractionHandlers.ts**: Interaction logic that:
-  - Defines what happens when players click on each object
-  - Manages object-specific animations and effects
-  - Creates custom dialogs for complex interactions like the fish tank
-  - Updates game state based on player choices
-
-- **TypingGame.ts**: Mini-game implementation that:
+- **TypingGame**: A full-featured typing mini-game component:
   - Creates a minimalist black and white typing interface
   - Handles keyboard input during the mini-game
-  - Uses a simple match completion system
   - Updates game state based on mini-game outcome
 
 ### Logic Flow
@@ -199,13 +200,13 @@ The office scene uses a modular architecture for better code organization:
    - Scene1_Office (LOW energy) → Scene2_Skytrain (MEDIUM energy) → Scene3_Bus (HIGH energy) → Scene4_Ending
 
 3. **Player Choice Flow**:
-   - Office scene: Interact with objects, complete/skip typing mini-game, feed fish
+   - Office scene: Interact with objects, complete/skip typing mini-game
    - Skytrain scene: Select thoughts that define character mindset
    - Bus scene: Decide how to handle the unexpected phone call
    - Ending scene: View one of four endings based on accumulated choices
 
 4. **Ending Determination**:
-   - Each choice contributes toward one of four ending types
+   - Each choice contributes toward one of four ending types: BALANCED, WORKAHOLIC, CAREFREE, or BURNOUT
    - The ending with the most accumulated points is selected
    - Choices from all scenes factor into the final outcome
 
@@ -219,10 +220,9 @@ The office scene uses a modular architecture for better code organization:
 #### Internal Dependencies
 - **BaseScene** ← parent of → **All game scenes**
 - **CursorManager** ← used by → **BaseScene**
-- **GameState** ← depends on → **Scene1_Office** (for accessing scene objects)
-- **DialogSystem** ← depends on → **Scene1_Office** (for adding UI elements)
-- **InteractionHandlers** ← depends on → **DialogSystem**, **GameState**, **TypingGame**
-- **TypingGame** ← depends on → **DialogSystem**, **GameState**
+- **GameStateManager** ← used by → **All game scenes** and **DialogManager**
+- **DialogManager** ← used by → **All game scenes**
+- **TypingGame** ← used in → **Scene1_Office**
 
 #### Asset Dependencies
 - Custom cursor images (cursor.png, cursor_focus.png)

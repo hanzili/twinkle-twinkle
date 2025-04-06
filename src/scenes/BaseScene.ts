@@ -33,6 +33,19 @@ export class BaseScene extends Scene {
         // Store the default font in the registry so it's available to all scenes
         this.registry.set('defaultFont', 'PressStart2P');
         
+        // Add global click sound - make sure the sound is loaded first
+        this.input.on('pointerdown', () => {
+            try {
+                // Check if the sound exists in the cache first
+                if (this.sound.get('mouse-clicking')) {
+                    console.log('Playing click sound'); // TODO: Fix not playing sound
+                    this.sound.play('mouse-clicking', { volume: 5.0 });
+                }
+            } catch (e) {
+                console.log('Click sound playback failed', e);
+            }
+        });
+        
         // Override the add.text method to always use our font
         // This ensures all text created with this.add.text() uses our font
         if (!this.originalAddText) {
@@ -135,6 +148,9 @@ export class BaseScene extends Scene {
      * This runs automatically when the scene stops
      */
     shutdown(): void {
+        // Stop all audio when leaving the scene
+        this.sound.stopAll();
+        
         if (this.cursorManager) {
             this.cursorManager.destroy();
             this.cursorInitialized = false;
@@ -145,6 +161,9 @@ export class BaseScene extends Scene {
      * Helper method to transition to another scene with proper cursor cleanup
      */
     protected transitionToScene(sceneKey: string): void {
+        // Stop all audio when transitioning
+        this.sound.stopAll();
+        
         if (this.cursorManager) {
             this.cursorManager.destroy();
             this.cursorInitialized = false;

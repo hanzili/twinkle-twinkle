@@ -1,11 +1,6 @@
 import { BaseScene, EnergyLevel } from './BaseScene';
 import { GameStateManager, Ending } from '../utils/GameStateManager';
-
-// Dialog type enum similar to Scene1_Office
-enum DialogType {
-    NARRATION,
-    PROTAGONIST
-}
+import { DialogManager, DialogType } from '../utils/DialogManager';
 
 export class Scene3_Bus extends BaseScene {
     private background: Phaser.GameObjects.Image;
@@ -13,16 +8,15 @@ export class Scene3_Bus extends BaseScene {
     private ignoreButton: Phaser.GameObjects.Container;
     private acceptButton: Phaser.GameObjects.Container;
     private postponeButton: Phaser.GameObjects.Container;
-    private gameState: GameStateManager;
     
-    // Narration elements
-    private narrationBox: Phaser.GameObjects.Image;
-    private protagonist: Phaser.GameObjects.Image;
-    private dialogText: Phaser.GameObjects.Text;
+    // Use centralized managers
+    private gameStateManager: GameStateManager;
+    private dialogManager: DialogManager;
     
     constructor() {
         super('Scene3_Bus');
-        this.gameState = GameStateManager.getInstance();
+        this.gameStateManager = GameStateManager.getInstance();
+        this.dialogManager = DialogManager.getInstance();
     }
 
     preload() {
@@ -50,136 +44,76 @@ export class Scene3_Bus extends BaseScene {
         const centerX = gameWidth / 2;
         const centerY = gameHeight / 2;
         
+        // Initialize dialog manager with this scene
+        this.dialogManager.init(this);
+        
         // Initialize custom cursor
         this.initCursor();
         
         // Display energy level (HIGH in this scene)
         this.showEnergyLevel(EnergyLevel.HIGH);
         
-        // Setup narration elements
-        this.setupNarration();
-        
         // Step 1: Show on-bus background first
         this.background = this.add.image(centerX, centerY, 'on_bus_bg')
             .setDisplaySize(gameWidth, gameHeight)
             .setDepth(0);
         
-        // Show initial dialog
-        this.showDialog("Finally got on the SkyTrain... Almost home now.", DialogType.PROTAGONIST, () => {
-            this.checkDialogAndContinue();
-        });
+        // Show initial dialog and continue to next step
+        this.showInitialDialog();
     }
     
-    private setupNarration() {
-        // Get scene dimensions for center positioning
-        const gameWidth = this.cameras.main.width;
-        const gameHeight = this.cameras.main.height;
-        const centerX = gameWidth / 2;
+    private async showInitialDialog(): Promise<void> {
+        // Show the first dialog
+        await this.dialogManager.showDialog(
+            "Finally got on the SkyTrain... Almost home now.",
+            DialogType.PROTAGONIST
+        );
         
-        // Position dialog boxes at the bottom third of the screen
-        const dialogY = gameHeight - 250;
-        
-        // Add narration box and protagonist image (initially hidden)
-        this.narrationBox = this.add.image(centerX, dialogY - 200, 'narration')
-            .setVisible(false)
-            .setScale(0.5)
-            .setDepth(100); // Ensure dialog appears above other elements
-            
-        this.protagonist = this.add.image(centerX, dialogY - 200, 'protagonist')
-            .setVisible(false)
-            .setScale(0.5)
-            .setDepth(100); // Ensure dialog appears above other elements
-            
-        // Add text field for dialog
-        this.dialogText = this.add.text(centerX, dialogY + 50, '', {
-            fontFamily: 'Courier New',
-            fontSize: '24px',
-            color: '#000000',
-            align: 'center',
-            wordWrap: { width: 900 }
-        })
-        .setOrigin(0.5)
-        .setDepth(101)
-        .setVisible(false);
+        // Continue to next step
+        this.checkDialogAndContinue();
     }
     
-    private showDialog(text: string, type: DialogType, callback?: () => void): void {
-        // First hide any existing dialog elements
-        this.hideDialog();
-        
-        // Show appropriate dialog based on type
-        if (type === DialogType.NARRATION) {
-            this.narrationBox.setVisible(true);
-        } else {
-            this.protagonist.setVisible(true);
-        }
-        
-        // Update and show text
-        this.dialogText.setText(text);
-        this.dialogText.setVisible(true);
-        
-        // Create a click handler to dismiss the dialog
-        this.input.once('pointerdown', () => {
-            this.hideDialog();
-            if (callback) {
-                callback();
-            }
-        });
-    }
-    
-    private hideDialog(): void {
-        // Hide dialog elements
-        this.narrationBox.setVisible(false);
-        this.protagonist.setVisible(false);
-        this.dialogText.setVisible(false);
-    }
-    
-    private checkDialogAndContinue(): void {
+    private async checkDialogAndContinue(): Promise<void> {
         // Check if player completed report in previous scene
-        const choices = this.gameState.getAllChoices();
-        const reportSkipped = choices['computer'] === 'skipped';
+        const reportSkipped = !this.gameStateManager.hasCompletedTypingGame();
         
         if (reportSkipped) {
             // Show additional dialog about not finishing report
-            this.showDialog(
+            await this.dialogManager.showDialog(
                 "Hope it's okay I didn't finish that report... I'll just go in early tomorrow to get it done.",
-                DialogType.PROTAGONIST,
-                () => {
-                    this.continueToPhoneRinging();
-                }
+                DialogType.PROTAGONIST
             );
-        } else {
-            // Continue directly to phone ringing
-            this.continueToPhoneRinging();
         }
+        
+        // Continue to phone ringing
+        this.continueToPhoneRinging();
     }
     
-    private continueToPhoneRinging(): void {
+    private async continueToPhoneRinging(): Promise<void> {
         // Show dialog about phone call
-        this.showDialog(
+        await this.dialogManager.showDialog(
             "Oh no, I hope it's not a call from work... Let me check.",
-            DialogType.PROTAGONIST,
-            () => {
-                // Step 2: Show phone ringing background
-                this.background.setVisible(false);
-                this.phoneRinging = this.add.image(
-                    this.cameras.main.width / 2, 
-                    this.cameras.main.height / 2, 
-                    'phone_ringing_bg'
-                )
-                .setDisplaySize(this.cameras.main.width, this.cameras.main.height)
-                .setDepth(0);
-                
-                // Show narration about what to do with the call
-                this.showDialog(
-                    "What will you do with this call?",
-                    DialogType.NARRATION,
-                    () => {
-                        this.createChoiceButtons();
-                    }
-                );
-            }
+            DialogType.PROTAGONIST
         );
+        
+        // Step 2: Show phone ringing background
+        this.background.setVisible(false);
+        this.phoneRinging = this.add.image(
+            this.cameras.main.width / 2, 
+            this.cameras.main.height / 2, 
+            'phone_ringing_bg'
+        )
+        .setDisplaySize(this.cameras.main.width, this.cameras.main.height)
+        .setDepth(0);
+        
+        // Show narration about what to do with the call
+        await this.dialogManager.showDialog(
+            "What will you do with this call?",
+            DialogType.NARRATION
+        );
+        
+        // Show choice buttons
+        this.createChoiceButtons();
     }
     
     private createChoiceButtons(): void {
@@ -243,9 +177,21 @@ export class Scene3_Bus extends BaseScene {
         }
         
         // Record the choice with the centralized game state manager
-        this.gameState.recordChoice('phone_call', choice, scoreUpdates);
+        this.gameStateManager.recordChoice('phone_call', choice, scoreUpdates);
+        
+        // Clean up dialog manager before transition
+        this.dialogManager.cleanup();
         
         // Continue to the ending scene
         this.transitionToScene('Scene4_Ending');
+    }
+    
+    // Clean up when leaving the scene
+    shutdown(): void {
+        // Clean up dialog manager before leaving
+        this.dialogManager.cleanup();
+        
+        // Call parent shutdown
+        super.shutdown();
     }
 } 

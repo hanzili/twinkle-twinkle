@@ -23,6 +23,13 @@ export class MainMenu extends BaseScene
         // Set background to black
         this.cameras.main.setBackgroundColor('#000000');
         
+        // Play background music
+        try {
+            this.sound.play('bgm1', { loop: true, volume: 0.5 });
+        } catch (e) {
+            console.log('Background music playback failed, continuing without music');
+        }
+        
         // Create initial title screen image centered in screen
         this.titleScreen = this.add.image(
             this.cameras.main.width / 2, 
@@ -113,7 +120,7 @@ export class MainMenu extends BaseScene
                 
                 // Play click sound if available
                 try {
-                    this.sound.play('click');
+                    this.sound.play('button-selection');
                 } catch (e) {
                     console.log('Sound play failed, continuing without sound');
                 }
