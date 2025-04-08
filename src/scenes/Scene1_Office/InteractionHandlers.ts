@@ -213,27 +213,39 @@ export class InteractionHandlers {
     // Create a button to leave the office
     private createLeaveButton(): void {
         try {
+            // 检查是否已经创建过按钮
+            const existing = this.scene.children.getByName('leaveButton');
+            if (existing) {
+                console.log("🔁 Leave button already exists, skipping creation");
+                return; // 按钮已存在，直接返回
+            }
+
             this.scene.sound.play('click');
+
+            const centerX = this.scene.cameras.main.width / 2;
+
+            console.log("🆕 Creating new leave button!");
+
+            // 创建离开按钮
+            const leaveButton = this.scene.add.text(centerX, 200, 'Ready to leave the office?', {
+                fontSize: '28px',
+                color: '#ffffff',
+                backgroundColor: '#000000',
+                padding: {x: 20, y: 10}
+            })
+                .setOrigin(0.5)
+                .setDepth(999) // 放高一点，避免被盖住
+                .setInteractive({useHandCursor: true})
+                .setName('leaveButton') // ✅ 加个名字，方便检查是否已经存在
+                .on('pointerover', () => leaveButton.setBackgroundColor('#333333'))
+                .on('pointerout', () => leaveButton.setBackgroundColor('#000000'))
+                .on('pointerdown', () => {
+                    console.log("Leave button clicked!"); // ✅ debug 用
+                    this.scene.leaveOffice();
+                });
+
         } catch (e) {
-            console.log('Audio playback failed, continuing without sound');
+            console.log('Error creating leave button:', e);
         }
-
-        const centerX = this.scene.cameras.main.width / 2;
-
-        // Create the leave button
-        const leaveButton = this.scene.add.text(centerX, 200, 'Ready to leave the office?', {
-            fontSize: '28px',
-            color: '#ffffff',
-            backgroundColor: '#000000',
-            padding: {x: 20, y: 10}
-        })
-            .setOrigin(0.5)
-            .setDepth(100)
-            .setInteractive({useHandCursor: true})
-            .on('pointerover', () => leaveButton.setBackgroundColor('#333333'))
-            .on('pointerout', () => leaveButton.setBackgroundColor('#000000'))
-            .on('pointerdown', () => {
-                this.scene.leaveOffice();
-            });
     }
 }
