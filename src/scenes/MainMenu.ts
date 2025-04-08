@@ -19,28 +19,28 @@ export class MainMenu extends BaseScene
     {
         // Call parent create method to set up defaults
         super.create();
-        
+
         // Set background to black
         this.cameras.main.setBackgroundColor('#000000');
-        
+
         // Play background music
         try {
             this.sound.play('bgm1', { loop: true, volume: 0.5 });
         } catch (e) {
             console.log('Background music playback failed, continuing without music');
         }
-        
+
         // Create initial title screen image centered in screen
         this.titleScreen = this.add.image(
-            this.cameras.main.width / 2, 
-            this.cameras.main.height / 2, 
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2,
             'start-game-1'
         );
-        
+
         // Calculate scale to fit screen while maintaining aspect ratio
         const screenRatio = this.cameras.main.width / this.cameras.main.height;
         const imageRatio = this.titleScreen.width / this.titleScreen.height;
-        
+
         if (screenRatio > imageRatio) {
             // Screen is wider than the image
             this.titleScreen.setScale(
@@ -52,24 +52,24 @@ export class MainMenu extends BaseScene
                 this.cameras.main.width / this.titleScreen.width * 0.9
             );
         }
-        
+
         // Start the animation sequence
         this.startTitleAnimation();
-        
+
         // Add the start button positioned at the bottom right of the screen
         // Position it with some margin from the edges
         const buttonX = this.cameras.main.width - 600; // Right margin
         const buttonY = this.cameras.main.height - 150; // Bottom margin
-        
+
         this.startButton = this.add.image(
             buttonX,
-            buttonY, 
+            buttonY,
             'start-game-button'
         );
-        
+
         // Make the button much smaller
         this.startButton.setScale(0.15); // Reduce to 15% of original size
-        
+
         // Add "START" text on the button with smaller font size
         const startText = this.add.text(
             buttonX,
@@ -83,10 +83,10 @@ export class MainMenu extends BaseScene
                 strokeThickness: 4
             }
         ).setOrigin(0.5);
-        
+
         // Group the button and text for hover effects
         const buttonGroup = [this.startButton, startText];
-        
+
         // Make the button interactive with hover effects
         this.startButton
             .setInteractive({ useHandCursor: true })
@@ -117,14 +117,14 @@ export class MainMenu extends BaseScene
                 if (this.animationTimer) {
                     this.animationTimer.remove();
                 }
-                
+
                 // Play click sound if available
                 try {
-                    this.sound.play('button-selection');
+                    this.sound.play('click');
                 } catch (e) {
                     console.log('Sound play failed, continuing without sound');
                 }
-                
+
                 // Zoom in effect on the button and text
                 this.tweens.add({
                     targets: buttonGroup,
@@ -133,23 +133,23 @@ export class MainMenu extends BaseScene
                     duration: 250, // Faster animation
                     ease: 'Sine.easeOut'
                 });
-                
+
                 // Fade out effect
                 this.cameras.main.fade(800, 0, 0, 0, false, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {
                         // Reset the player's energy level when starting a new game
                         localStorage.setItem('playerEnergyLevel', EnergyLevel.LOW);
-                        
+
                         // Use the BaseScene's transitionToScene method
                         this.transitionToScene('Scene1_Office');
                     }
                 });
             });
-        
+
         // Initialize custom cursor using BaseScene method
         this.initCursor();
     }
-    
+
     /**
      * Start the title screen animation sequence
      */
@@ -162,23 +162,23 @@ export class MainMenu extends BaseScene
             loop: true
         });
     }
-    
+
     /**
      * Update the title screen to the next frame in the animation sequence
      */
     private updateTitleFrame(): void {
         // Increment frame counter
         this.currentFrame++;
-        
+
         // Loop back to first frame if we've shown all frames
         if (this.currentFrame > this.maxFrames) {
             this.currentFrame = 1;
         }
-        
+
         // Update the image texture
         this.titleScreen.setTexture('start-game-' + this.currentFrame);
     }
-    
+
     /**
      * Clean up resources when scene is shut down
      */
@@ -187,10 +187,10 @@ export class MainMenu extends BaseScene
         if (this.animationTimer) {
             this.animationTimer.remove();
         }
-        
+
         // Kill all tweens
         this.tweens.killAll();
-        
+
         // Call parent shutdown to clean up cursor and other resources
         super.shutdown();
     }

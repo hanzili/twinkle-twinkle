@@ -20,11 +20,11 @@ export class BaseScene extends Scene {
     protected cursorInitialized: boolean = false;
     protected energyDisplay: Phaser.GameObjects.Image;
     private originalAddText: Function;
-    
+
     constructor(key: string) {
         super(key);
     }
-    
+
     /**
      * Default create method that runs in every scene
      * Child scenes should call super.create() at the beginning of their create method
@@ -32,39 +32,26 @@ export class BaseScene extends Scene {
     create(): void {
         // Store the default font in the registry so it's available to all scenes
         this.registry.set('defaultFont', 'PressStart2P');
-        
-        // Add global click sound - make sure the sound is loaded first
-        this.input.on('pointerdown', () => {
-            try {
-                // Check if the sound exists in the cache first
-                if (this.sound.get('mouse-clicking')) {
-                    console.log('Playing click sound'); // TODO: Fix not playing sound
-                    this.sound.play('mouse-clicking', { volume: 5.0 });
-                }
-            } catch (e) {
-                console.log('Click sound playback failed', e);
-            }
-        });
-        
+
         // Override the add.text method to always use our font
         // This ensures all text created with this.add.text() uses our font
         if (!this.originalAddText) {
             this.originalAddText = this.add.text;
-            
+
             // @ts-ignore - We're deliberately overriding the add.text method
             this.add.text = (x: number, y: number, text: string | string[], style?: Phaser.Types.GameObjects.Text.TextStyle) => {
                 // Ensure style is an object
                 const newStyle = style || {};
-                
+
                 // ALWAYS apply our font to all text objects, overriding any existing fontFamily
                 newStyle.fontFamily = 'PressStart2P';
-                
+
                 // Call the original method with our enhanced style
                 return this.originalAddText.call(this.add, x, y, text, newStyle);
             };
         }
     }
-    
+
     /**
      * Get default font style configuration for text elements
      * This provides consistent text styling across all scenes
@@ -80,58 +67,58 @@ export class BaseScene extends Scene {
             ...overrides
         };
     }
-    
+
     /**
      * Initialize the custom cursor with consistent settings
      * Call this in the create() method of child scenes
      */
     protected initCursor(options?: { scale?: number, offsetX?: number, offsetY?: number }): void {
         if (this.cursorInitialized) return;
-        
+
         const cursorOptions = {
             scale: 0.02,
             offsetX: 0,
             offsetY: 0,
             ...options
         };
-        
+
         this.cursorManager = new CursorManager(this, cursorOptions);
         this.cursorManager.init();
         this.cursorInitialized = true;
     }
-    
+
     /**
      * Display the energy indicator in the top right corner
      * @param level The energy level to display
      * @param options Optional configuration for the energy display
      */
     protected showEnergyLevel(
-        level: EnergyLevel, 
+        level: EnergyLevel,
         options: { scale?: number, x?: number, y?: number } = {}
     ): void {
         // Remove any existing energy display
         if (this.energyDisplay) {
             this.energyDisplay.destroy();
         }
-        
+
         // Configure position and scale (with defaults)
         const x = options.x ?? this.cameras.main.width - 110;
         const y = options.y ?? 70;
         const scale = options.scale ?? 0.1;
-        
+
         // Create the energy indicator at the top right corner
         this.energyDisplay = this.add.image(x, y, `energy-${level}`);
-        
+
         // Apply scaling
         this.energyDisplay.setScale(scale);
-        
+
         // Ensure it's visible above other elements
         this.energyDisplay.setDepth(100);
-        
+
         // Store the energy level in local storage for persistence between scenes
         localStorage.setItem('playerEnergyLevel', level);
     }
-    
+
     /**
      * Get the current energy level from storage or default to LOW
      */
@@ -142,7 +129,7 @@ export class BaseScene extends Scene {
         }
         return EnergyLevel.LOW; // Default to LOW if not set
     }
-    
+
     /**
      * Clean up cursor and other resources when leaving this scene
      * This runs automatically when the scene stops
@@ -150,25 +137,25 @@ export class BaseScene extends Scene {
     shutdown(): void {
         // Stop all audio when leaving the scene
         this.sound.stopAll();
-        
+
         if (this.cursorManager) {
             this.cursorManager.destroy();
             this.cursorInitialized = false;
         }
     }
-    
+
     /**
      * Helper method to transition to another scene with proper cursor cleanup
      */
     protected transitionToScene(sceneKey: string): void {
         // Stop all audio when transitioning
         this.sound.stopAll();
-        
+
         if (this.cursorManager) {
             this.cursorManager.destroy();
             this.cursorInitialized = false;
         }
-        
+
         this.scene.start(sceneKey);
     }
-} 
+}
