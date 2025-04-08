@@ -60,6 +60,7 @@ export class InteractionHandlers {
                 type: DialogType.NARRATION
             }
         ]);
+        this.checkIfCanLeave();
     }
 
     public handleComputerInteraction = async (): Promise<void> => {
@@ -146,6 +147,7 @@ export class InteractionHandlers {
                 type: DialogType.NARRATION
             }
         ]);
+        this.checkIfCanLeave();
     }
 
     public handleFishTankInteraction = async (): Promise<void> => {
@@ -193,8 +195,14 @@ export class InteractionHandlers {
         // Clear all glow hints before starting the typing game
         this.scene.clearGlowHints();
 
-        // Start the typing game
+        // 开始打字游戏，并监听完成事件
         if (this.typingGame) {
+            // 注册打字完成后的回调
+            this.typingGame.onComplete(() => {
+                this.checkIfCanLeave(); // ✅ 只有完成 typing 才检查是否能离开
+            });
+
+            // 启动打字游戏
             this.typingGame.start();
         } else {
             console.error('TypingGame not initialized');

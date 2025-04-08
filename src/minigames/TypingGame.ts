@@ -21,6 +21,11 @@ export class TypingGame {
 
     private typingSound?: Phaser.Sound.BaseSound;
     private typingStopTimer?: Phaser.Time.TimerEvent;
+    private onCompleteCallback: (() => void) | null = null;
+
+    public onComplete(callback: () => void): void {
+        this.onCompleteCallback = callback;
+    }
 
     // Constructor
     constructor(scene: Phaser.Scene, dialogManager: DialogManager, gameStateManager: GameStateManager) {
@@ -258,40 +263,12 @@ export class TypingGame {
         }
 
         // Check if player has completed required interactions to leave
-        this.checkIfCanLeave();
-    }
+        // this.checkIfCanLeave();
 
-    // Check if player can leave the office
-    private checkIfCanLeave(): void {
-        // Player must interact with computer and fish tank to be able to leave
-        if (this.gameStateManager.hasInteractedWith('computer') &&
-            this.gameStateManager.hasInteractedWith('fishtank')) {
-            this.createLeaveButton();
+        // Notify external systems
+        if (this.onCompleteCallback) {
+            this.onCompleteCallback();
         }
-    }
-
-    // Create a button to leave the office
-    private createLeaveButton(): void {
-        const centerX = this.scene.cameras.main.width / 2;
-
-        // Create the leave button
-        const leaveButton = this.scene.add.text(centerX, 200, 'Ready to leave the office?', {
-            fontSize: '28px',
-            color: '#ffffff',
-            backgroundColor: '#000000',
-            padding: {x: 20, y: 10}
-        })
-            .setOrigin(0.5)
-            .setDepth(100)
-            .setInteractive({useHandCursor: true})
-            .on('pointerover', () => leaveButton.setBackgroundColor('#333333'))
-            .on('pointerout', () => leaveButton.setBackgroundColor('#000000'))
-            .on('pointerdown', () => {
-                // Call the leaveOffice method on the scene
-                if (this.scene.hasOwnProperty('leaveOffice')) {
-                    (this.scene as any).leaveOffice();
-                }
-            });
     }
 
     // Clean up all UI elements
