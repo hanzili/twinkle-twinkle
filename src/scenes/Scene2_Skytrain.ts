@@ -51,11 +51,13 @@ export class Scene2_Skytrain extends BaseScene {
             type: ThoughtType.FREEDOM
         }
     ];
-    private thoughtCountText!: Phaser.GameObjects.Text;
 
     // Add centralized managers
     private dialogManager: DialogManager;
     private gameStateManager: GameStateManager;
+
+    // To avoid playing post-thought-dialog again
+    private hasStartedTransition: boolean = false;
 
     constructor() {
         super('Scene2_Skytrain');
@@ -143,7 +145,66 @@ export class Scene2_Skytrain extends BaseScene {
 
         // Shuffle thoughts array for randomness
         this.shuffleThoughts();
+
+        this.playSceneIntroDialog();
     }
+
+    private async playSceneIntroDialog(): Promise<void> {
+        await this.dialogManager.showDialogSequence([
+            {
+                text: "The streets are so empty tonight.",
+                type: DialogType.PROTAGONIST
+            },
+            {
+                text: "Guess it’s just too late.",
+                type: DialogType.PROTAGONIST
+            },
+            {
+                text: "When you walk alone on streets like this… your mind won’t stop running.",
+                type: DialogType.PROTAGONIST
+            },
+            {
+                text: "Thoughts are fleeting… I just want to hold onto something and make sense of it all.",
+                type: DialogType.PROTAGONIST
+            },
+            {
+                text: "Help she sort through her thoughts. What is she really thinking?" +
+                    "Pay attention to your choices. They may affect the ending.",
+                type: DialogType.NARRATION
+            }
+        ]);
+    }
+
+    private async playPostThoughtDialog(): Promise<void> {
+        await this.dialogManager.showDialogSequence([
+            {
+                text: "My mind feels clearer now.",
+                type: DialogType.PROTAGONIST
+            },
+            {
+                text: "Sometimes, knowing what you think and want really matters.",
+                type: DialogType.PROTAGONIST
+            },
+            {
+                text: "But people often act against their own thoughts.",
+                type: DialogType.PROTAGONIST
+            },
+            {
+                text: "I guess no one wants to be the one train that derails in a world that’s running smoothly.",
+                type: DialogType.PROTAGONIST
+            },
+            {
+                text: "...",
+                type: DialogType.PROTAGONIST
+            },
+            {
+                text: "Ah — there’s the station.",
+                type: DialogType.PROTAGONIST
+            }
+        ]);
+}
+
+
 
     // Method to switch to the next background in the animation sequence
     private switchBackground(): void {
@@ -297,44 +358,47 @@ export class Scene2_Skytrain extends BaseScene {
         }
     }
 
-    // Proceed to the next scene
-    private goToNextScene(): void {
-        // If already transitioning, don't do it again
-        if (this.tweens.getTweensOf(this.backgroundTimer).length > 0) {
-            return;
-        }
-
-        // Stop timers
-        this.backgroundTimer.destroy();
-        this.thoughtTimer.destroy();
-
-        // Create a fade out effect
-        const fadeRect = this.add.rectangle(
-            this.cameras.main.width / 2,
-            this.cameras.main.height / 2,
-            this.cameras.main.width,
-            this.cameras.main.height,
-            0x000000
-        ).setAlpha(0).setDepth(100);
-
-        // Animate fade out
-        this.tweens.add({
-            targets: fadeRect,
-            alpha: 1,
-            duration: 1500,
-            ease: 'Power2',
-            onComplete: () => {
-                // Update the game state
-                this.recordFinalThoughtScores();
-
-                // Clean up dialog manager before transition
-                this.dialogManager.cleanup();
-
-                // Go to next scene
-                this.transitionToScene('Scene3_Bus');
-            }
-        });
+    private fadeOutAndTransition(): void {
+    if (this.tweens.getTweensOf(this.backgroundTimer).length > 0) {
+        return;
     }
+
+    this.backgroundTimer.destroy();
+    this.thoughtTimer.destroy();
+
+    const fadeRect = this.add.rectangle(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2,
+        this.cameras.main.width,
+        this.cameras.main.height,
+        0x000000
+    ).setAlpha(0).setDepth(100);
+
+    this.tweens.add({
+        targets: fadeRect,
+        alpha: 1,
+        duration: 1500,
+        ease: 'Power2',
+        onComplete: () => {
+            this.recordFinalThoughtScores();
+            this.dialogManager.cleanup();
+            this.transitionToScene('Scene3_Bus');
+        }
+    });
+}
+
+
+    // Proceed to the next scene
+    private async goToNextScene(): Promise<void> {
+        // First play the dialog
+        if (this.hasStartedTransition) return; // to avoid repetition
+            this.hasStartedTransition = true;
+        await this.playPostThoughtDialog();
+
+        // Transit to the next plot
+        this.fadeOutAndTransition();
+}
+
 
     // Record final thought scores to determine the ending
     private recordFinalThoughtScores(): void {

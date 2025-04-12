@@ -1,6 +1,7 @@
-import { BaseScene, EnergyLevel } from './BaseScene';
-import { GameStateManager, Ending } from '../utils/GameStateManager';
-import { DialogManager, DialogType } from '../utils/DialogManager';
+import {BaseScene, EnergyLevel} from './BaseScene';
+import {GameStateManager, Ending} from '../utils/GameStateManager';
+import {DialogManager, DialogType} from '../utils/DialogManager';
+import {wait} from '../utils/TimeUtils';
 
 export class Scene3_Bus extends BaseScene {
     private background: Phaser.GameObjects.Image;
@@ -8,11 +9,11 @@ export class Scene3_Bus extends BaseScene {
     private ignoreButton: Phaser.GameObjects.Container;
     private acceptButton: Phaser.GameObjects.Container;
     private postponeButton: Phaser.GameObjects.Container;
-    
+
     // Use centralized managers
     private gameStateManager: GameStateManager;
     private dialogManager: DialogManager;
-    
+
     constructor() {
         super('Scene3_Bus');
         this.gameStateManager = GameStateManager.getInstance();
@@ -24,7 +25,7 @@ export class Scene3_Bus extends BaseScene {
         this.load.image('on_bus_bg', 'assets/scene3/on-bus-background.png');
         this.load.image('phone_ringing_bg', 'assets/scene3/phone-ringing-background.png');
         this.load.image('button', 'assets/scene3/button.png');
-        
+
         // Load dialog assets if not already loaded
         if (!this.textures.exists('narration')) {
             this.load.image('narration', 'assets/dialog/narration.png');
@@ -37,46 +38,46 @@ export class Scene3_Bus extends BaseScene {
     create() {
         // Call parent create method to set up defaults including font override
         super.create();
-        
+
         // Setup dimensions
         const gameWidth = this.cameras.main.width;
         const gameHeight = this.cameras.main.height;
         const centerX = gameWidth / 2;
         const centerY = gameHeight / 2;
-        
+
         // Initialize dialog manager with this scene
         this.dialogManager.init(this);
-        
+
         // Initialize custom cursor
         this.initCursor();
-        
+
         // Display energy level (HIGH in this scene)
         this.showEnergyLevel(EnergyLevel.HIGH);
-        
+
         // Step 1: Show on-bus background first
         this.background = this.add.image(centerX, centerY, 'on_bus_bg')
             .setDisplaySize(gameWidth, gameHeight)
             .setDepth(0);
-        
+
         // Show initial dialog and continue to next step
         this.showInitialDialog();
     }
-    
+
     private async showInitialDialog(): Promise<void> {
         // Show the first dialog
         await this.dialogManager.showDialog(
             "Finally got on the SkyTrain... Almost home now.",
             DialogType.PROTAGONIST
         );
-        
+
         // Continue to next step
         this.checkDialogAndContinue();
     }
-    
+
     private async checkDialogAndContinue(): Promise<void> {
         // Check if player completed report in previous scene
         const reportSkipped = !this.gameStateManager.hasCompletedTypingGame();
-        
+
         if (reportSkipped) {
             // Show additional dialog about not finishing report
             await this.dialogManager.showDialog(
@@ -84,114 +85,191 @@ export class Scene3_Bus extends BaseScene {
                 DialogType.PROTAGONIST
             );
         }
-        
+
         // Continue to phone ringing
         this.continueToPhoneRinging();
     }
-    
+
     private async continueToPhoneRinging(): Promise<void> {
         // Show dialog about phone call
         await this.dialogManager.showDialog(
             "Oh no, I hope it's not a call from work... Let me check.",
             DialogType.PROTAGONIST
         );
-        
+
         // Step 2: Show phone ringing background
         this.background.setVisible(false);
+        try {
+            this.sound.play('notification');
+        } catch (e) {
+            console.warn('Failed to play click sound:', e);
+        }
         this.phoneRinging = this.add.image(
-            this.cameras.main.width / 2, 
-            this.cameras.main.height / 2, 
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2,
             'phone_ringing_bg'
         )
-        .setDisplaySize(this.cameras.main.width, this.cameras.main.height)
-        .setDepth(0);
-        
+            .setDisplaySize(this.cameras.main.width, this.cameras.main.height)
+            .setDepth(0);
+
         // Show narration about what to do with the call
-        await this.dialogManager.showDialog(
-            "What will you do with this call?",
-            DialogType.NARRATION
-        );
-        
+        await this.dialogManager.showDialogSequence([
+            {
+                text: "...",
+                type: DialogType.PROTAGONIST
+            },
+            {
+                text: "Haha. Of course it's work.",
+                type: DialogType.PROTAGONIST
+            },
+            {
+                text: "Haha. Of course it's work.",
+                type: DialogType.PROTAGONIST
+            },
+            {
+                text: "Probably asking me to finish the report tonight after all.",
+                type: DialogType.PROTAGONIST
+            },
+            {
+                text: "What will you do with this call?",
+                type: DialogType.PROTAGONIST
+            }
+        ]);
+
         // Show choice buttons
         this.createChoiceButtons();
     }
-    
+
     private createChoiceButtons(): void {
         // Get the right side position (about 80% of screen width)
         const rightSideX = this.cameras.main.width * 0.85;
-        
+
         // Position buttons in a vertical column on the right side of the screen
         this.createButton(rightSideX, this.cameras.main.height * 0.55, 'Ignore the call', 'ignore');
         this.createButton(rightSideX, this.cameras.main.height * 0.65, 'Answer and accept the task', 'accept');
         this.createButton(rightSideX, this.cameras.main.height * 0.75, 'Answer and ask to finish the rest tomorrow', 'postpone');
     }
-    
+
     private createButton(x: number, y: number, text: string, choice: string): Phaser.GameObjects.Container {
         // Create button image and scale it down
         const buttonImg = this.add.image(0, 0, 'button').setScale(0.10);
-        
+
         // Create text with smaller font size to fit the scaled button
         const buttonText = this.add.text(0, 0, text, {
             fontSize: '16px',
             color: '#000000',
             align: 'center',
-            wordWrap: { width: buttonImg.displayWidth - 20 }
+            wordWrap: {width: buttonImg.displayWidth - 20}
         }).setOrigin(0.5);
-        
+
         // Create container with button image and text
         const container = this.add.container(x, y, [buttonImg, buttonText]);
-        
+
         // Set size based on the scaled button image for interaction
         container.setSize(buttonImg.displayWidth, buttonImg.displayHeight);
-        
+
         // Make interactive
-        container.setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => {
+        container.setInteractive({useHandCursor: true})
+            .on('pointerdown', async () => {
+                try {
+                    this.sound.play('click');
+                } catch (e) {
+                    console.warn('Failed to play click sound:', e);
+                }
+
+                await wait(this, 1000);
+                try {
+                    this.sound.play('text');
+                } catch (e) {
+                    console.warn('Failed to play click sound:', e);
+                }
+                await wait(this, 500);
                 this.proceedToEnding(choice);
             });
-        
+
         return container;
     }
-    
-    private proceedToEnding(choice: string): void {
+
+    private async proceedToEnding(choice: string): Promise<void> {
         // Define score updates based on the choice
         const scoreUpdates: Partial<Record<Ending, number>> = {};
-        
-        switch(choice) {
+
+        switch (choice) {
             case 'ignore':
                 // Ignoring work increases carefree score but might lead to burnout
+                await this.dialogManager.showDialogSequence([
+                    {text: "You hesitated... and didn’t pick up.", type: DialogType.NARRATION},
+                    {
+                        text: "Something deep inside whispered for you to run.",
+                        type: DialogType.NARRATION
+                    },
+                    {text: "You silenced your phone.", type: DialogType.NARRATION},
+                    {
+                        text: "Maybe you won’t go to the office tomorrow.",
+                        type: DialogType.NARRATION
+                    },
+                    {text: "Or the day after.", type: DialogType.NARRATION},
+                    {
+                        text: "You sat on the skytrain, not knowing why, and missed your stop.",
+                        type: DialogType.NARRATION
+                    },
+                    {
+                        text: "You rode it all the way to the end of the line.",
+                        type: DialogType.NARRATION
+                    }
+                ]);
                 scoreUpdates[Ending.CAREFREE] = 2;
                 scoreUpdates[Ending.BURNOUT] = 1;
                 break;
-                
+
             case 'accept':
                 // Accepting additional work increases workaholic score
+                await this.dialogManager.showDialogSequence([
+                    {
+                        text: "Taylor: \"Did you finish the report tonight? I need it ASAP.\"",
+                        type: DialogType.NARRATION
+                    },
+                    {
+                        text: "Not yet... I’m really sorry. I’ll come in early tomorrow to finish it.",
+                        type: DialogType.PROTAGONIST
+                    }
+                ]);
                 scoreUpdates[Ending.WORKAHOLIC] = 3;
                 scoreUpdates[Ending.BURNOUT] = 1;
                 break;
-                
+
             case 'postpone':
                 // Postponing work is a balanced approach
+                await this.dialogManager.showDialogSequence([
+                    {
+                        text: "Taylor: \"Did you finish the report tonight? I need it ASAP.\"",
+                        type: DialogType.NARRATION
+                    },
+                    {
+                        text: "Sure. I’ll finish it tonight and send it over.",
+                        type: DialogType.PROTAGONIST
+                    }
+                ]);
                 scoreUpdates[Ending.BALANCED] = 3;
                 break;
         }
-        
+
         // Record the choice with the centralized game state manager
         this.gameStateManager.recordChoice('phone_call', choice, scoreUpdates);
-        
+
         // Clean up dialog manager before transition
         this.dialogManager.cleanup();
-        
+
         // Continue to the ending scene
         this.transitionToScene('Scene4_Ending');
     }
-    
+
     // Clean up when leaving the scene
     shutdown(): void {
         // Clean up dialog manager before leaving
         this.dialogManager.cleanup();
-        
+
         // Call parent shutdown
         super.shutdown();
     }
-} 
+}

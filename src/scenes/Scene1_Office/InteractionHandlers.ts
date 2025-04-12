@@ -115,6 +115,10 @@ export class InteractionHandlers {
                 "I'll take a quick moment to collect my thoughts before diving in.",
                 DialogType.PROTAGONIST
             );
+            await this.dialogManager.showDialog(
+                "...",
+                DialogType.PROTAGONIST
+            );
             await this.startTypingGame();
         }
     }
@@ -188,6 +192,10 @@ export class InteractionHandlers {
             "Let me focus and get this report done.",
             DialogType.PROTAGONIST
         );
+        await this.dialogManager.showDialog(
+            "Type out the gray words on the screen. Don’t miss any punctuation… or I’ll get called out for the little things again.",
+            DialogType.NARRATION
+        );
 
         // Hide dialog before starting game
         this.dialogManager.hideDialog();
@@ -219,7 +227,7 @@ export class InteractionHandlers {
     }
 
     // Create a button to leave the office
-    private createLeaveButton(): void {
+    private async createLeaveButton(): Promise<void> {
         try {
             // 检查是否已经创建过按钮
             const existing = this.scene.children.getByName('leaveButton');
@@ -228,7 +236,21 @@ export class InteractionHandlers {
                 return; // 按钮已存在，直接返回
             }
 
-            this.scene.sound.play('click');
+            this.scene.sound.play('packing', { volume: 10 });
+            await this.dialogManager.showDialogSequence([
+                {
+                    text: "There’s still a bit left in the report, but… whatever. It’s too late now.",
+                    type: DialogType.PROTAGONIST
+                },
+                {
+                    text: "I’ll come in early tomorrow and finish it.",
+                    type: DialogType.PROTAGONIST
+                },
+                {
+                    text: "Let’s head to the skytrain station.",
+                    type: DialogType.PROTAGONIST
+                }
+            ]);
 
             const centerX = this.scene.cameras.main.width / 2;
 
@@ -248,6 +270,7 @@ export class InteractionHandlers {
                 .on('pointerover', () => leaveButton.setBackgroundColor('#333333'))
                 .on('pointerout', () => leaveButton.setBackgroundColor('#000000'))
                 .on('pointerdown', () => {
+                    this.scene.sound.play('click');
                     console.log("Leave button clicked!"); // ✅ debug 用
                     this.scene.leaveOffice();
                 });

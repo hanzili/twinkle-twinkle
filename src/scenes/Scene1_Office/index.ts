@@ -99,24 +99,92 @@ export class Scene1_Office extends BaseScene {
     }
 
     private async showInitialDialog(): Promise<void> {
-        // First dialog - protagonist dialog, now using promise-based approach
-        await this.dialogManager.showDialog(
-            "Overtime again... It's already past 9 PM.",
-            DialogType.PROTAGONIST
-        );
+    await this.dialogManager.showDialog(
+        "...It's just me in the office again.",
+        DialogType.PROTAGONIST
+    );
 
-        // Second dialog - no need for setTimeout or callbacks
-        await this.dialogManager.showDialog(
-            "This is so hard. There's still so much I'm not good at... How long will it take for me to finally get used to this job?",
-            DialogType.PROTAGONIST
-        );
+    await this.dialogManager.showDialog(
+        "Overtime again... It's already past 9pm.",
+        DialogType.PROTAGONIST
+    );
 
-        // Add a hint for the player
-        await this.dialogManager.showDialog(
-            "I should check my email and feed my fish before I leave for the day.",
-            DialogType.PROTAGONIST
-        );
-    }
+    await this.dialogManager.showDialog(
+        "My shoulders ache. My eyes feel dry. I’m so tired.",
+        DialogType.PROTAGONIST
+    );
+
+    await this.dialogManager.showDialog(
+        "When I was in school, I used to imagine the future. I thought once I started working, I’d become a cool, free adult.",
+        DialogType.PROTAGONIST
+    );
+
+    await this.dialogManager.showDialog(
+        "I thought I’d become the kind of successful grown-up every kid dreams about.",
+        DialogType.PROTAGONIST
+    );
+
+    await this.dialogManager.showDialog(
+        "Wearing nice clothes to work, meeting friends on the weekends, traveling the world when I had time off.",
+        DialogType.PROTAGONIST
+    );
+
+    await this.dialogManager.showDialog(
+        "I even pictured myself living in a high-rise by the sea, where I could look up after a long day and see the quiet ocean at night.",
+        DialogType.PROTAGONIST
+    );
+
+    await this.dialogManager.showDialog(
+        "But now I’m just sharing a cheap apartment far from the sea with roommates.",
+        DialogType.PROTAGONIST
+    );
+
+    await this.dialogManager.showDialog(
+        "I don’t even have the energy to dress up or go out anymore.",
+        DialogType.PROTAGONIST
+    );
+
+    await this.dialogManager.showDialog(
+        "The more I live, the farther I seem from the person I once imagined I’d be.",
+        DialogType.PROTAGONIST
+    );
+
+    await this.dialogManager.showDialog(
+        "If my younger self saw me now... I think she’d be disappointed.",
+        DialogType.PROTAGONIST
+    );
+
+    await this.dialogManager.showDialog(
+        "This is so hard. There’s still so much I’m not good at... How long will it take for me to finally get used to this job?",
+        DialogType.PROTAGONIST
+    );
+
+    await this.dialogManager.showDialog(
+        "...",
+        DialogType.PROTAGONIST
+    );
+
+    await this.dialogManager.showDialog(
+        "I just want to go home...",
+        DialogType.PROTAGONIST
+    );
+
+    await this.dialogManager.showDialog(
+        "But I haven’t finished everything for today. I can’t leave yet.",
+        DialogType.PROTAGONIST
+    );
+
+    await this.dialogManager.showDialog(
+        "I should check my email and feed my fish before I leave.",
+        DialogType.PROTAGONIST
+    );
+
+    await this.dialogManager.showDialog(
+        "Explore her workspace following the icons, and help her finish the last few tasks.",
+        DialogType.NARRATION
+    );
+}
+
 
     private setupNarration() {
         // This method now just initializes placeholder objects for backward compatibility

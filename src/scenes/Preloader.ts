@@ -66,10 +66,16 @@ export class Preloader extends BaseScene
         this.load.audio('bgm1', 'sound/bgm1.mp3');
         this.load.audio('click', 'sound/mouse_click.mp3');
         this.load.audio('type', 'sound/typing.mp3');
+        this.load.audio('packing', 'sound/Packing.mp3');
 
         this.load.audio('bgm2', 'sound/bgm2.mp3');
         this.load.audio('rain', 'sound/rainy.mp3');
-        this.load.audio('selection', 'sound/button_selection.mp3')
+        this.load.audio('selection', 'sound/button_selection.mp3');
+
+        this.load.audio('notification', 'sound/iphone_notification.mp3');
+        this.load.audio('text', 'sound/iphone_text_message.mp3')
+
+        this.load.audio('ocean', 'sound/ocean_waves.mp3')
     }
 
     create ()
