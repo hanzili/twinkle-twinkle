@@ -122,6 +122,7 @@ export class Scene4_Ending extends BaseScene {
             case Ending.WORKAHOLIC:
                 return 'overachiever_ending_bg';
             case Ending.BALANCED:
+                return 'the_balanced.png'
             default:
                 return 'default_ending_bg';
         }
