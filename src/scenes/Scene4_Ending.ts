@@ -24,6 +24,7 @@ export class Scene4_Ending extends BaseScene {
         this.load.image('escape_ending_bg', 'assets/ending/escape-ending.png');
         this.load.image('fun_ending_bg', 'assets/ending/fun-ending.png');
         this.load.image('overachiever_ending_bg', 'assets/ending/overachiever-ending.png');
+        this.load.image('the_balanced', 'assets/ending/the_balanced.png')
         this.load.image('default_ending_bg', 'assets/office_background.png'); // Fallback background
         this.load.image('button', 'assets/scene3/button.png');
 
@@ -122,7 +123,7 @@ export class Scene4_Ending extends BaseScene {
             case Ending.WORKAHOLIC:
                 return 'overachiever_ending_bg';
             case Ending.BALANCED:
-                return 'the_balanced.png'
+                return 'the_balanced'
             default:
                 return 'default_ending_bg';
         }
