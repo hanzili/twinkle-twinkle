@@ -86,9 +86,9 @@ The built files will be in the `dist` folder, ready to be deployed to any web se
 ## Technical Details
 
 This game is built with:
-- [Phaser 3](https://phaser.io/) - HTML5 game framework
-- [TypeScript](https://www.typescriptlang.org/) - For type-safe code
-- [Vite](https://vitejs.dev/) - Next generation frontend tooling
+- [Phaser 3](https://phaser.io/) - HTML5 game framework (v3.88.2)
+- [TypeScript](https://www.typescriptlang.org/) - For type-safe code (v5.4.5)
+- [Vite](https://vitejs.dev/) - Next generation frontend tooling (v5.3.1)
 
 ## Code Architecture
 
@@ -108,6 +108,7 @@ twinkle-twinkle/
 │   │   ├── ending/    # Ending scenes assets
 │   │   ├── sound/     # Game audio files
 │   │   └── start-game/ # Main menu assets
+│   ├── favicon.png    # Game favicon
 │   └── style.css      # Global styles
 ├── src/               # Source code
 │   ├── main.ts        # Entry point that initializes the game
@@ -127,13 +128,15 @@ twinkle-twinkle/
 │   ├── utils/             # Utility classes
 │   │   ├── CursorManager.ts    # Custom cursor management
 │   │   ├── DialogManager.ts    # Dialog system for all scenes
-│   │   └── GameStateManager.ts # Game state and choice tracking
+│   │   ├── GameStateManager.ts # Game state and choice tracking
+│   │   └── TimeUtils.ts        # Time utility functions
 │   └── minigames/         # Minigame implementations 
 │       └── TypingGame.ts      # Typing minigame component
 ├── vite/              # Vite configuration
 ├── index.html         # HTML entry point
 ├── tsconfig.json      # TypeScript configuration
-└── package.json       # Project dependencies
+├── package.json       # Project dependencies
+└── game_design.md     # Detailed game plot and design document
 ```
 
 ### Core Components
@@ -165,6 +168,9 @@ twinkle-twinkle/
   - Creates and displays dialog boxes with text
   - Manages dialog choice buttons
   - Controls dialog flow and callbacks
+
+- **TimeUtils**: Provides time-related utility functions:
+  - Helps manage timers and delays in gameplay
 
 #### Scene Management
 
@@ -216,12 +222,14 @@ twinkle-twinkle/
 - **Phaser 3.88.2**: Core game engine providing scene management, sprites, input handling
 - **TypeScript 5.4.5**: Type system for safer code
 - **Vite 5.3.1**: Build tool and development server
+- **Canvas 3.1.0**: HTML5 canvas rendering support
 
 #### Internal Dependencies
 - **BaseScene** ← parent of → **All game scenes**
 - **CursorManager** ← used by → **BaseScene**
 - **GameStateManager** ← used by → **All game scenes** and **DialogManager**
 - **DialogManager** ← used by → **All game scenes**
+- **TimeUtils** ← used by → **Multiple components for timing operations**
 - **TypingGame** ← used in → **Scene1_Office**
 
 #### Asset Dependencies

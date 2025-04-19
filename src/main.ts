@@ -7,6 +7,7 @@ import { Scene1_Office } from './scenes/Scene1_Office';
 import { Scene2_Skytrain } from './scenes/Scene2_Skytrain';
 import { Scene3_Bus } from './scenes/Scene3_Bus';
 import { Scene4_Ending } from './scenes/Scene4_Ending';
+import { LocalizationTest } from './utils/LocalizationTest';
 
 import { Game, Types } from "phaser";
 
@@ -35,4 +36,11 @@ const config: Types.Core.GameConfig = {
     ]
 };
 
-export default new Game(config);
+const game = new Game(config);
+
+// Add localization test to window for easy testing from browser console
+(window as any).testLocalization = async () => {
+    await LocalizationTest.runTest();
+};
+
+export default game;

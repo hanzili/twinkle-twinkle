@@ -1,4 +1,5 @@
 import { BaseScene } from './BaseScene';
+import { LocalizationManager } from '../utils/LocalizationManager';
 
 export class Preloader extends BaseScene
 {
@@ -78,10 +79,19 @@ export class Preloader extends BaseScene
         this.load.audio('ocean', 'sound/ocean_waves.mp3')
     }
 
-    create ()
+    async create ()
     {
         // Call parent create method to set up defaults including font override
         super.create();
+
+        // Initialize the LocalizationManager and wait for it to load the default language
+        const locManager = LocalizationManager.getInstance();
+        
+        // Ensure the initial language is loaded before continuing
+        await locManager.setLanguage(locManager.getCurrentLanguage());
+        
+        // Log the current language for debugging
+        console.log('Initialized with language:', locManager.getCurrentLanguage());
 
         //  When all the assets have loaded, it's often worth creating global objects here that the rest of the game can use.
         //  For example, you can define global animations here, so we can use them in other scenes.

@@ -1,0 +1,13 @@
+{
+  "main_menu": {
+    "start_game": "Start Game",
+    "language": "Language"
+  },
+  "scene1": {
+    "intro": {
+      "dialog1": "...It's just me in the office again.",
+      "dialog2": "Overtime again... It's already past 9pm.",
+      "dialog3": "My shoulders ache. My eyes feel dry. I'm so tired."
+    }
+  }
+} 
